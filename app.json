@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "FutManagerExpo",
-    "slug": "FutManagerExpo",
+    "name": "FutManager",
+    "slug": "FutManager",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

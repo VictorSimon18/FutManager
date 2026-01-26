@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx react-native@latest init:*)",
+      "Bash(npx @react-native-community/cli init FutManager --skip-install)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(npx react-native run-android)",
+      "Bash(npx react-native doctor)",
+      "Bash(npx create-expo-app@latest:*)",
+      "Bash(npx expo install:*)",
+      "Bash(npx expo start)",
+      "Bash(timeout /t 10)"
+    ]
+  }
+}
