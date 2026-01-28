@@ -37,8 +37,7 @@ export default function AppNavigator() {
           name="RoleSelection"
           component={RoleSelectionScreen}
           options={{
-            title: 'Selecciona tu rol',
-            headerBackVisible: false,
+            headerShown: false,
           }}
         />
         <Stack.Screen

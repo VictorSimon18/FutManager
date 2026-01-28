@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Surface, TouchableRipple } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import AuroraBackground from '../components/AuroraBackground';
 
 export default function RoleSelectionScreen({ navigation }) {
   const roles = [
@@ -36,10 +37,10 @@ export default function RoleSelectionScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <AuroraBackground>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Icon name="soccer" size={60} color="#00AA13" />
+          <Icon name="soccer" size={60} color="#00FF4C" />
           <Text variant="headlineLarge" style={styles.title}>
             Selecciona tu rol
           </Text>
@@ -56,8 +57,8 @@ export default function RoleSelectionScreen({ navigation }) {
               borderless
               style={styles.roleCardWrapper}
             >
-              <Surface style={[styles.roleCard, { borderLeftColor: role.color }]} elevation={2}>
-                <View style={[styles.iconContainer, { backgroundColor: role.color + '20' }]}>
+              <Surface style={[styles.roleCard, { borderLeftColor: role.color }]} elevation={0}>
+                <View style={[styles.iconContainer, { backgroundColor: role.color + '30' }]}>
                   <Icon name={role.icon} size={48} color={role.color} />
                 </View>
                 <View style={styles.roleContent}>
@@ -68,21 +69,17 @@ export default function RoleSelectionScreen({ navigation }) {
                     {role.description}
                   </Text>
                 </View>
-                <Icon name="chevron-right" size={32} color="#999" />
+                <Icon name="chevron-right" size={32} color="rgba(255,255,255,0.5)" />
               </Surface>
             </TouchableRipple>
           ))}
         </View>
       </ScrollView>
-    </View>
+    </AuroraBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
   scrollContent: {
     flexGrow: 1,
     padding: 20,
@@ -95,10 +92,10 @@ const styles = StyleSheet.create({
   title: {
     fontWeight: 'bold',
     marginTop: 16,
-    color: '#1A1A1A',
+    color: '#fff',
   },
   subtitle: {
-    color: '#666',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 8,
     textAlign: 'center',
   },
@@ -114,8 +111,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderRadius: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     borderLeftWidth: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   iconContainer: {
     width: 80,
@@ -130,11 +129,11 @@ const styles = StyleSheet.create({
   },
   roleTitle: {
     fontWeight: 'bold',
-    color: '#1A1A1A',
+    color: '#fff',
     marginBottom: 4,
   },
   roleDescription: {
-    color: '#666',
+    color: 'rgba(255,255,255,0.7)',
     lineHeight: 20,
   },
 });
