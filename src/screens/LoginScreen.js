@@ -18,6 +18,16 @@ export default function LoginScreen({ navigation }) {
     navigation.navigate('RoleSelection');
   };
 
+  const inputTheme = {
+    colors: {
+      primary: '#00AA13',
+      onSurfaceVariant: '#aaa',
+      onSurface: '#fff',
+      surfaceVariant: 'rgba(255,255,255,0.08)',
+      outline: 'rgba(255,255,255,0.2)',
+    },
+  };
+
   return (
     <AuroraBackground>
       <KeyboardAvoidingView
@@ -47,15 +57,7 @@ export default function LoginScreen({ navigation }) {
                   mode="outlined"
                   style={styles.input}
                   left={<TextInput.Icon icon="account" />}
-                  theme={{
-                    colors: {
-                      primary: '#00AA13',
-                      onSurfaceVariant: '#aaa',
-                      onSurface: '#fff',
-                      surfaceVariant: 'rgba(255,255,255,0.08)',
-                      outline: 'rgba(255,255,255,0.2)',
-                    },
-                  }}
+                  theme={inputTheme}
                   textColor="#fff"
                 />
               )}
@@ -69,15 +71,7 @@ export default function LoginScreen({ navigation }) {
                 autoCapitalize="none"
                 style={styles.input}
                 left={<TextInput.Icon icon="email" />}
-                theme={{
-                  colors: {
-                    primary: '#00AA13',
-                    onSurfaceVariant: '#aaa',
-                    onSurface: '#fff',
-                    surfaceVariant: 'rgba(255,255,255,0.08)',
-                    outline: 'rgba(255,255,255,0.2)',
-                  },
-                }}
+                theme={inputTheme}
                 textColor="#fff"
               />
 
@@ -89,15 +83,7 @@ export default function LoginScreen({ navigation }) {
                 secureTextEntry
                 style={styles.input}
                 left={<TextInput.Icon icon="lock" />}
-                theme={{
-                  colors: {
-                    primary: '#00AA13',
-                    onSurfaceVariant: '#aaa',
-                    onSurface: '#fff',
-                    surfaceVariant: 'rgba(255,255,255,0.08)',
-                    outline: 'rgba(255,255,255,0.2)',
-                  },
-                }}
+                theme={inputTheme}
                 textColor="#fff"
               />
 
@@ -122,11 +108,7 @@ export default function LoginScreen({ navigation }) {
                 contentStyle={styles.buttonContent}
                 icon="google"
                 textColor="#fff"
-                theme={{
-                  colors: {
-                    outline: 'rgba(255,255,255,0.3)',
-                  },
-                }}
+                theme={{ colors: { outline: 'rgba(255,255,255,0.3)' } }}
               >
                 Continuar con Google
               </Button>
