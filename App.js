@@ -12,6 +12,7 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { theme } from './src/theme/theme';
 import { initDatabase } from './src/database/database';
 import { seedDatabase } from './src/database/seed';
+import { AuthProvider } from './src/context/AuthContext';
 
 export default function App() {
   const [dbReady, setDbReady] = useState(false);
@@ -60,7 +61,9 @@ export default function App() {
     <SafeAreaProvider>
       <PaperProvider theme={theme}>
         <StatusBar style="light" backgroundColor="#00AA13" />
-        <AppNavigator />
+        <AuthProvider>
+          <AppNavigator />
+        </AuthProvider>
       </PaperProvider>
     </SafeAreaProvider>
   );

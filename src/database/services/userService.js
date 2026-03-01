@@ -62,6 +62,42 @@ export async function getUserById(id) {
 }
 
 /**
+ * Devuelve los roles que tiene un usuario en la app.
+ * Consulta las tablas entrenadores, jugadores y aficionados.
+ * @param {number} userId
+ * @returns {Promise<Array<{ role: string, equipo_id: number, roleId: number }>>}
+ */
+export async function getUserRoles(userId) {
+  try {
+    const db = await getDatabase();
+    const roles = [];
+
+    const coach = await db.getFirstAsync(
+      'SELECT id, equipo_id FROM entrenadores WHERE usuario_id = ?',
+      [userId]
+    );
+    if (coach) roles.push({ role: 'coach', equipo_id: coach.equipo_id, roleId: coach.id });
+
+    const player = await db.getFirstAsync(
+      'SELECT id, equipo_id FROM jugadores WHERE usuario_id = ? AND activo = 1',
+      [userId]
+    );
+    if (player) roles.push({ role: 'player', equipo_id: player.equipo_id, roleId: player.id });
+
+    const fan = await db.getFirstAsync(
+      'SELECT id, equipo_id FROM aficionados WHERE usuario_id = ?',
+      [userId]
+    );
+    if (fan) roles.push({ role: 'fan', equipo_id: fan.equipo_id, roleId: fan.id });
+
+    return roles;
+  } catch (error) {
+    console.error('[userService] Error al obtener roles del usuario:', error);
+    throw error;
+  }
+}
+
+/**
  * Actualiza los datos de un usuario.
  * @param {number} id
  * @param {{ nombre?, email?, password_hash? }} data

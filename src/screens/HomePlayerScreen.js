@@ -1,9 +1,42 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Surface, Card, Avatar, ProgressBar, Chip } from 'react-native-paper';
+import React, { useContext } from 'react';
+import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { Text, Surface, Card, Avatar, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import { AuthContext } from '../context/AuthContext';
+import { usePlayerStats } from '../hooks/usePlayerStats';
+import { useTrainings } from '../hooks/useTrainings';
 
-export default function HomePlayerScreen({ navigation }) {
+const MESES_CORTO = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+
+function parseFecha(fechaStr) {
+  // Devuelve { dia, mes, mesCorto } a partir de 'YYYY-MM-DD'
+  if (!fechaStr) return {};
+  const partes = fechaStr.split('-');
+  if (partes.length < 3) return {};
+  return {
+    dia: parseInt(partes[2]),
+    mes: parseInt(partes[1]),
+    mesCorto: MESES_CORTO[parseInt(partes[1]) - 1],
+  };
+}
+
+export default function HomePlayerScreen() {
+  const { roleData, equipoId } = useContext(AuthContext);
+
+  // roleData es el registro de la tabla jugadores
+  const jugadorId = roleData?.id ?? null;
+
+  const { stats, seasonStats, loading: loadingStats } = usePlayerStats(jugadorId);
+  const { upcomingTrainings, loading: loadingTrainings } = useTrainings(equipoId);
+
+  const isLoading = loadingStats || loadingTrainings;
+
+  const proximoEntrenamiento = upcomingTrainings[0] ?? null;
+  const { dia, mesCorto } = parseFecha(proximoEntrenamiento?.fecha);
+
+  // Últimos 3 partidos del jugador (los más recientes están primero)
+  const ultimosPartidos = stats.slice(0, 3);
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -11,179 +44,211 @@ export default function HomePlayerScreen({ navigation }) {
         <Surface style={styles.header} elevation={2}>
           <View style={styles.headerContent}>
             <View style={styles.playerInfo}>
-              <Avatar.Image
+              <Avatar.Icon
                 size={64}
-                source={{ uri: 'https://via.placeholder.com/150' }}
+                icon="account"
                 style={styles.avatar}
               />
               <View style={styles.playerDetails}>
                 <Text variant="headlineSmall" style={styles.playerName}>
-                  Juan Pérez
+                  {roleData?.nombre ?? 'Jugador'}
                 </Text>
                 <View style={styles.playerMeta}>
-                  <Chip icon="shield" compact style={styles.positionChip}>
-                    Delantero
-                  </Chip>
-                  <Text variant="bodyMedium" style={styles.playerNumber}>
-                    #10
-                  </Text>
+                  {roleData?.posicion ? (
+                    <Chip icon="shield" compact style={styles.positionChip}>
+                      {roleData.posicion}
+                    </Chip>
+                  ) : null}
+                  {roleData?.dorsal != null && (
+                    <Text variant="bodyMedium" style={styles.playerNumber}>
+                      #{roleData.dorsal}
+                    </Text>
+                  )}
                 </View>
               </View>
             </View>
           </View>
         </Surface>
 
-        {/* Performance Stats */}
-        <Text variant="titleLarge" style={styles.sectionTitle}>
-          Rendimiento
-        </Text>
-        <View style={styles.statsGrid}>
-          <Surface style={[styles.statBox, styles.greenBox]} elevation={1}>
-            <Icon name="soccer" size={28} color="#00AA13" />
-            <Text variant="headlineMedium" style={styles.statValue}>
-              12
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#00AA13" style={styles.loader} />
+        ) : (
+          <>
+            {/* Estadísticas de rendimiento */}
+            <Text variant="titleLarge" style={styles.sectionTitle}>
+              Rendimiento
             </Text>
-            <Text variant="bodySmall" style={styles.statLabel}>
-              Goles
-            </Text>
-          </Surface>
-
-          <Surface style={[styles.statBox, styles.blueBox]} elevation={1}>
-            <Icon name="shoe-cleat" size={28} color="#1E88E5" />
-            <Text variant="headlineMedium" style={styles.statValue}>
-              8
-            </Text>
-            <Text variant="bodySmall" style={styles.statLabel}>
-              Asistencias
-            </Text>
-          </Surface>
-
-          <Surface style={[styles.statBox, styles.orangeBox]} elevation={1}>
-            <Icon name="run-fast" size={28} color="#FF6F00" />
-            <Text variant="headlineMedium" style={styles.statValue}>
-              18
-            </Text>
-            <Text variant="bodySmall" style={styles.statLabel}>
-              Partidos
-            </Text>
-          </Surface>
-
-          <Surface style={[styles.statBox, styles.purpleBox]} elevation={1}>
-            <Icon name="clock-outline" size={28} color="#9C27B0" />
-            <Text variant="headlineMedium" style={styles.statValue}>
-              1.350'
-            </Text>
-            <Text variant="bodySmall" style={styles.statLabel}>
-              Minutos
-            </Text>
-          </Surface>
-        </View>
-
-        {/* Next Training */}
-        <Text variant="titleLarge" style={styles.sectionTitle}>
-          Próximo entrenamiento
-        </Text>
-        <Card style={styles.trainingCard}>
-          <Card.Content>
-            <View style={styles.trainingHeader}>
-              <View style={styles.trainingDate}>
-                <Text variant="headlineLarge" style={styles.dateDay}>
-                  20
+            <View style={styles.statsGrid}>
+              <Surface style={[styles.statBox, styles.greenBox]} elevation={1}>
+                <Icon name="soccer" size={28} color="#00AA13" />
+                <Text variant="headlineMedium" style={styles.statValue}>
+                  {seasonStats?.total_goles ?? 0}
                 </Text>
-                <Text variant="bodySmall" style={styles.dateMonth}>
-                  ENE
+                <Text variant="bodySmall" style={styles.statLabel}>
+                  Goles
                 </Text>
-              </View>
-              <View style={styles.trainingInfo}>
-                <Text variant="titleMedium" style={styles.trainingTitle}>
-                  Entrenamiento Técnico
+              </Surface>
+
+              <Surface style={[styles.statBox, styles.blueBox]} elevation={1}>
+                <Icon name="shoe-cleat" size={28} color="#1E88E5" />
+                <Text variant="headlineMedium" style={styles.statValue}>
+                  {seasonStats?.total_asistencias ?? 0}
                 </Text>
-                <View style={styles.trainingMeta}>
-                  <Icon name="clock" size={16} color="#666" />
-                  <Text variant="bodyMedium" style={styles.trainingTime}>
-                    17:00 - 19:00
+                <Text variant="bodySmall" style={styles.statLabel}>
+                  Asistencias
+                </Text>
+              </Surface>
+
+              <Surface style={[styles.statBox, styles.orangeBox]} elevation={1}>
+                <Icon name="run-fast" size={28} color="#FF6F00" />
+                <Text variant="headlineMedium" style={styles.statValue}>
+                  {seasonStats?.partidos_jugados ?? 0}
+                </Text>
+                <Text variant="bodySmall" style={styles.statLabel}>
+                  Partidos
+                </Text>
+              </Surface>
+
+              <Surface style={[styles.statBox, styles.purpleBox]} elevation={1}>
+                <Icon name="clock-outline" size={28} color="#9C27B0" />
+                <Text variant="headlineMedium" style={styles.statValue}>
+                  {seasonStats?.total_minutos ?? 0}'
+                </Text>
+                <Text variant="bodySmall" style={styles.statLabel}>
+                  Minutos
+                </Text>
+              </Surface>
+            </View>
+
+            {/* Próximo entrenamiento */}
+            <Text variant="titleLarge" style={styles.sectionTitle}>
+              Próximo entrenamiento
+            </Text>
+            {proximoEntrenamiento ? (
+              <Card style={styles.trainingCard}>
+                <Card.Content>
+                  <View style={styles.trainingHeader}>
+                    <View style={styles.trainingDate}>
+                      <Text variant="headlineLarge" style={styles.dateDay}>
+                        {dia}
+                      </Text>
+                      <Text variant="bodySmall" style={styles.dateMonth}>
+                        {mesCorto}
+                      </Text>
+                    </View>
+                    <View style={styles.trainingInfo}>
+                      <Text variant="titleMedium" style={styles.trainingTitle}>
+                        {proximoEntrenamiento.tipo || 'Entrenamiento'}
+                      </Text>
+                      <View style={styles.trainingMeta}>
+                        <Icon name="clock" size={16} color="#666" />
+                        <Text variant="bodyMedium" style={styles.trainingTime}>
+                          {proximoEntrenamiento.hora_inicio} - {proximoEntrenamiento.hora_fin}
+                        </Text>
+                      </View>
+                      {proximoEntrenamiento.ubicacion ? (
+                        <View style={styles.trainingMeta}>
+                          <Icon name="map-marker" size={16} color="#666" />
+                          <Text variant="bodyMedium" style={styles.trainingLocation}>
+                            {proximoEntrenamiento.ubicacion}
+                          </Text>
+                        </View>
+                      ) : null}
+                    </View>
+                  </View>
+                  <View style={styles.trainingFooter}>
+                    <Chip icon="check-circle" style={styles.confirmedChip}>
+                      Programado
+                    </Chip>
+                  </View>
+                </Card.Content>
+              </Card>
+            ) : (
+              <Card style={styles.trainingCard}>
+                <Card.Content>
+                  <Text variant="bodyMedium" style={styles.noDataText}>
+                    No hay entrenamientos próximos programados
                   </Text>
-                </View>
-                <View style={styles.trainingMeta}>
-                  <Icon name="map-marker" size={16} color="#666" />
-                  <Text variant="bodyMedium" style={styles.trainingLocation}>
-                    Campo de entrenamiento
-                  </Text>
-                </View>
-              </View>
-            </View>
-            <View style={styles.trainingFooter}>
-              <Chip icon="check-circle" style={styles.confirmedChip}>
-                Confirmado
-              </Chip>
-            </View>
-          </Card.Content>
-        </Card>
+                </Card.Content>
+              </Card>
+            )}
 
-        {/* Progress */}
-        <Text variant="titleLarge" style={styles.sectionTitle}>
-          Objetivos del mes
-        </Text>
-        <Surface style={styles.progressCard} elevation={1}>
-          <View style={styles.progressItem}>
-            <View style={styles.progressHeader}>
-              <Text variant="bodyLarge">Goles marcados</Text>
-              <Text variant="bodyLarge" style={styles.progressValue}>
-                4/6
-              </Text>
-            </View>
-            <ProgressBar progress={0.66} color="#00AA13" style={styles.progressBar} />
-          </View>
+            {/* Últimos partidos */}
+            <Text variant="titleLarge" style={styles.sectionTitle}>
+              Últimos partidos
+            </Text>
+            {ultimosPartidos.length > 0 ? (
+              <Surface style={styles.matchesCard} elevation={1}>
+                {ultimosPartidos.map((stat, index) => {
+                  const resultado =
+                    stat.goles_favor > stat.goles_contra
+                      ? 'Victoria'
+                      : stat.goles_favor < stat.goles_contra
+                      ? 'Derrota'
+                      : 'Empate';
+                  const resultadoColor =
+                    resultado === 'Victoria'
+                      ? '#E8F5E9'
+                      : resultado === 'Derrota'
+                      ? '#FFEBEE'
+                      : '#FFF3E0';
+                  const { dia: diaP, mesCorto: mesP } = parseFecha(stat.fecha);
 
-          <View style={styles.progressItem}>
-            <View style={styles.progressHeader}>
-              <Text variant="bodyLarge">Asistencias</Text>
-              <Text variant="bodyLarge" style={styles.progressValue}>
-                3/5
-              </Text>
-            </View>
-            <ProgressBar progress={0.6} color="#1E88E5" style={styles.progressBar} />
-          </View>
-
-          <View style={styles.progressItem}>
-            <View style={styles.progressHeader}>
-              <Text variant="bodyLarge">Entrenamientos</Text>
-              <Text variant="bodyLarge" style={styles.progressValue}>
-                8/10
-              </Text>
-            </View>
-            <ProgressBar progress={0.8} color="#FF6F00" style={styles.progressBar} />
-          </View>
-        </Surface>
-
-        {/* Recent Matches */}
-        <Text variant="titleLarge" style={styles.sectionTitle}>
-          Últimos partidos
-        </Text>
-        <Surface style={styles.matchCard} elevation={1}>
-          <View style={styles.matchRow}>
-            <View style={styles.matchResult}>
-              <Text variant="bodyMedium" style={styles.matchDate}>
-                15 Ene
-              </Text>
-              <Text variant="titleMedium" style={styles.matchScore}>
-                3-1
-              </Text>
-              <Chip icon="trophy" compact style={styles.winChip}>
-                Victoria
-              </Chip>
-            </View>
-            <View style={styles.matchDetails}>
-              <Text variant="bodyMedium">vs. FC Barcelona</Text>
-              <View style={styles.playerMatchStats}>
-                <Icon name="soccer" size={16} color="#00AA13" />
-                <Text variant="bodySmall" style={styles.matchStat}>
-                  2 goles
+                  return (
+                    <View key={stat.id ?? index}>
+                      {index > 0 && <View style={styles.matchDivider} />}
+                      <View style={styles.matchRow}>
+                        <View style={styles.matchResult}>
+                          <Text variant="bodyMedium" style={styles.matchDate}>
+                            {diaP} {mesP}
+                          </Text>
+                          <Text variant="titleMedium" style={styles.matchScore}>
+                            {stat.goles_favor}-{stat.goles_contra}
+                          </Text>
+                          <Chip compact style={{ backgroundColor: resultadoColor }}>
+                            {resultado}
+                          </Chip>
+                        </View>
+                        <View style={styles.matchDetails}>
+                          <Text variant="bodyMedium">vs. {stat.rival}</Text>
+                          <View style={styles.playerMatchStats}>
+                            {stat.goles > 0 && (
+                              <>
+                                <Icon name="soccer" size={16} color="#00AA13" />
+                                <Text variant="bodySmall" style={styles.matchStat}>
+                                  {stat.goles} {stat.goles === 1 ? 'gol' : 'goles'}
+                                </Text>
+                              </>
+                            )}
+                            {stat.asistencias > 0 && (
+                              <>
+                                <Icon name="shoe-cleat" size={16} color="#1E88E5" />
+                                <Text variant="bodySmall" style={[styles.matchStat, { color: '#1E88E5' }]}>
+                                  {stat.asistencias} {stat.asistencias === 1 ? 'asistencia' : 'asistencias'}
+                                </Text>
+                              </>
+                            )}
+                            {stat.goles === 0 && stat.asistencias === 0 && (
+                              <Text variant="bodySmall" style={styles.noContribText}>
+                                {stat.minutos_jugados}' jugados
+                              </Text>
+                            )}
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })}
+              </Surface>
+            ) : (
+              <Surface style={styles.matchesCard} elevation={1}>
+                <Text variant="bodyMedium" style={styles.noDataText}>
+                  Aún no hay partidos registrados
                 </Text>
-              </View>
-            </View>
-          </View>
-        </Surface>
+              </Surface>
+            )}
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -233,6 +298,9 @@ const styles = StyleSheet.create({
   playerNumber: {
     fontWeight: 'bold',
     color: '#00AA13',
+  },
+  loader: {
+    marginTop: 60,
   },
   sectionTitle: {
     fontWeight: 'bold',
@@ -331,34 +399,16 @@ const styles = StyleSheet.create({
   confirmedChip: {
     backgroundColor: '#E8F5E9',
   },
-  progressCard: {
-    marginHorizontal: 20,
-    padding: 20,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    marginBottom: 24,
-  },
-  progressItem: {
-    marginBottom: 16,
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  progressValue: {
-    fontWeight: 'bold',
-    color: '#1A1A1A',
-  },
-  progressBar: {
-    height: 8,
-    borderRadius: 4,
-  },
-  matchCard: {
+  matchesCard: {
     marginHorizontal: 20,
     padding: 16,
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
+  },
+  matchDivider: {
+    height: 1,
+    backgroundColor: '#F0F0F0',
+    marginVertical: 12,
   },
   matchRow: {
     flexDirection: 'row',
@@ -375,9 +425,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1A1A1A',
   },
-  winChip: {
-    backgroundColor: '#E8F5E9',
-  },
   matchDetails: {
     flex: 1,
     justifyContent: 'center',
@@ -387,9 +434,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    flexWrap: 'wrap',
   },
   matchStat: {
     color: '#00AA13',
     fontWeight: '600',
+  },
+  noContribText: {
+    color: '#999',
+  },
+  noDataText: {
+    color: '#999',
+    fontStyle: 'italic',
   },
 });

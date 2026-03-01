@@ -48,7 +48,8 @@ export async function seedDatabase() {
   const entrenadorUserId = await createUser({
     nombre: 'Carlos Martínez',
     email: 'carlos@futmanager.es',
-    password_hash: 'hash_demo_entrenador',
+    // TODO: Implementar hash real con bcrypt en producción
+    password_hash: '123456',
   });
 
   // Registrar al entrenador en su tabla
@@ -74,6 +75,31 @@ export async function seedDatabase() {
     const id = await createPlayer({ ...jugador, equipo_id: equipoId });
     jugadorIds.push(id);
   }
+
+  // ── Usuario jugador de prueba (vinculado a Pablo López, dorsal 10) ───────────
+  const jugadorUserId = await createUser({
+    nombre: 'Pablo López',
+    email: 'jugador@futmanager.es',
+    // TODO: Implementar hash real con bcrypt en producción
+    password_hash: '123456',
+  });
+  // Vincular el usuario al jugador Pablo López (índice 3 en jugadoresData)
+  await db.runAsync(
+    'UPDATE jugadores SET usuario_id = ? WHERE id = ?',
+    [jugadorUserId, jugadorIds[3]]
+  );
+
+  // ── Usuario aficionado de prueba ─────────────────────────────────────────────
+  const fanUserId = await createUser({
+    nombre: 'María García',
+    email: 'fan@futmanager.es',
+    // TODO: Implementar hash real con bcrypt en producción
+    password_hash: '123456',
+  });
+  await db.runAsync(
+    'INSERT INTO aficionados (usuario_id, equipo_id) VALUES (?, ?)',
+    [fanUserId, equipoId]
+  );
 
   // ── Partidos ─────────────────────────────────────────────────────────────────
   // Partido pasado (finalizado)

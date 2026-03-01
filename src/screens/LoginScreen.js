@@ -1,22 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { TextInput, Button, Text, Surface, Divider } from 'react-native-paper';
+import {
+  TextInput,
+  Button,
+  Text,
+  Surface,
+  Divider,
+  HelperText,
+  ActivityIndicator,
+} from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import AuroraBackground from '../components/AuroraBackground';
+import { AuthContext } from '../context/AuthContext';
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen() {
+  const { login, register } = useContext(AuthContext);
+
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-
-  const handleLogin = () => {
-    navigation.navigate('RoleSelection');
-  };
-
-  const handleGoogleLogin = () => {
-    navigation.navigate('RoleSelection');
-  };
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const inputTheme = {
     colors: {
@@ -26,6 +31,37 @@ export default function LoginScreen({ navigation }) {
       surfaceVariant: 'rgba(255,255,255,0.08)',
       outline: 'rgba(255,255,255,0.2)',
     },
+  };
+
+  const handleSubmit = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      if (isLogin) {
+        await login(email, password);
+        // AuthContext actualiza isAuthenticated → AppNavigator redirige automáticamente
+      } else {
+        // Registro + login automático a continuación
+        await register(name, email, password);
+        await login(email, password);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fillDemoCredentials = () => {
+    setEmail('carlos@futmanager.es');
+    setPassword('123456');
+    setIsLogin(true);
+    setError('');
+  };
+
+  const handleToggleMode = () => {
+    setIsLogin(!isLogin);
+    setError('');
   };
 
   return (
@@ -87,40 +123,52 @@ export default function LoginScreen({ navigation }) {
                 textColor="#fff"
               />
 
+              {/* Mensaje de error */}
+              {error ? (
+                <HelperText type="error" visible style={styles.errorText}>
+                  {error}
+                </HelperText>
+              ) : null}
+
               <Button
                 mode="contained"
-                onPress={handleLogin}
+                onPress={handleSubmit}
                 style={styles.loginButton}
                 contentStyle={styles.buttonContent}
                 buttonColor="#00AA13"
                 textColor="#fff"
+                disabled={loading}
               >
-                {isLogin ? 'Iniciar Sesión' : 'Registrarse'}
+                {loading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  isLogin ? 'Iniciar Sesión' : 'Registrarse'
+                )}
               </Button>
+
+              {/* Hint con credenciales de demo */}
+              {isLogin && (
+                <Button
+                  mode="text"
+                  onPress={fillDemoCredentials}
+                  textColor="rgba(255,255,255,0.45)"
+                  compact
+                  style={styles.demoButton}
+                >
+                  Demo: carlos@futmanager.es / 123456
+                </Button>
+              )}
 
               <Divider style={styles.divider} />
 
-              {/* Google Sign In */}
-              <Button
-                mode="outlined"
-                onPress={handleGoogleLogin}
-                style={styles.googleButton}
-                contentStyle={styles.buttonContent}
-                icon="google"
-                textColor="#fff"
-                theme={{ colors: { outline: 'rgba(255,255,255,0.3)' } }}
-              >
-                Continuar con Google
-              </Button>
-
-              {/* Toggle Login/Register */}
+              {/* Toggle Login/Registro */}
               <View style={styles.toggleContainer}>
                 <Text variant="bodyMedium" style={styles.toggleText}>
                   {isLogin ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}
                 </Text>
                 <Button
                   mode="text"
-                  onPress={() => setIsLogin(!isLogin)}
+                  onPress={handleToggleMode}
                   compact
                   textColor="#00FF4C"
                 >
@@ -171,21 +219,25 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     backgroundColor: 'transparent',
   },
+  errorText: {
+    color: '#FF5252',
+    marginBottom: 8,
+    fontSize: 13,
+  },
   loginButton: {
     marginTop: 8,
-    marginBottom: 16,
+    marginBottom: 8,
     borderRadius: 8,
   },
   buttonContent: {
     paddingVertical: 8,
   },
-  divider: {
-    marginVertical: 20,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+  demoButton: {
+    marginBottom: 4,
   },
-  googleButton: {
-    marginBottom: 16,
-    borderRadius: 8,
+  divider: {
+    marginVertical: 16,
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
   toggleContainer: {
     flexDirection: 'row',
