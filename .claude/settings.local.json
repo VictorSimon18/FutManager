@@ -10,7 +10,9 @@
       "Bash(npx create-expo-app@latest:*)",
       "Bash(npx expo install:*)",
       "Bash(npx expo start)",
-      "Bash(timeout /t 10)"
+      "Bash(timeout /t 10)",
+      "WebSearch",
+      "WebFetch(domain:21st.dev)"
     ]
   }
 }
