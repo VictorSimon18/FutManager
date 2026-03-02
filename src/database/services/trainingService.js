@@ -77,6 +77,95 @@ export async function getUpcomingTrainings(equipoId) {
 }
 
 /**
+ * Obtiene un entrenamiento por su ID.
+ * @param {number} id
+ * @returns {Promise<object|null>}
+ */
+export async function getTrainingById(id) {
+  try {
+    const db = await getDatabase();
+    return await db.getFirstAsync('SELECT * FROM entrenamientos WHERE id = ?', [id]);
+  } catch (error) {
+    console.error('[trainingService] Error al obtener entrenamiento:', error);
+    throw error;
+  }
+}
+
+/**
+ * Actualiza los datos de un entrenamiento.
+ * @param {number} id
+ * @param {object} data Campos a actualizar
+ * @returns {Promise<number>} Filas afectadas
+ */
+export async function updateTraining(id, data) {
+  try {
+    const db = await getDatabase();
+    const result = await db.runAsync(
+      `UPDATE entrenamientos
+       SET fecha       = COALESCE(?, fecha),
+           hora_inicio = COALESCE(?, hora_inicio),
+           hora_fin    = COALESCE(?, hora_fin),
+           ubicacion   = COALESCE(?, ubicacion),
+           tipo        = COALESCE(?, tipo),
+           descripcion = COALESCE(?, descripcion)
+       WHERE id = ?`,
+      [
+        data.fecha ?? null,
+        data.hora_inicio ?? null,
+        data.hora_fin ?? null,
+        data.ubicacion ?? null,
+        data.tipo ?? null,
+        data.descripcion ?? null,
+        id,
+      ]
+    );
+    console.log(`[trainingService] Entrenamiento ${id} actualizado. Filas: ${result.changes}`);
+    return result.changes;
+  } catch (error) {
+    console.error('[trainingService] Error al actualizar entrenamiento:', error);
+    throw error;
+  }
+}
+
+/**
+ * Elimina un entrenamiento por su ID.
+ * @param {number} id
+ * @returns {Promise<number>} Filas afectadas
+ */
+export async function deleteTraining(id) {
+  try {
+    const db = await getDatabase();
+    const result = await db.runAsync('DELETE FROM entrenamientos WHERE id = ?', [id]);
+    console.log(`[trainingService] Entrenamiento ${id} eliminado. Filas: ${result.changes}`);
+    return result.changes;
+  } catch (error) {
+    console.error('[trainingService] Error al eliminar entrenamiento:', error);
+    throw error;
+  }
+}
+
+/**
+ * Actualiza el estado de un entrenamiento (por ejemplo, 'realizado').
+ * @param {number} id
+ * @param {string} estado Nuevo estado ('programado', 'realizado', 'cancelado')
+ * @returns {Promise<number>} Filas afectadas
+ */
+export async function updateTrainingStatus(id, estado) {
+  try {
+    const db = await getDatabase();
+    const result = await db.runAsync(
+      `UPDATE entrenamientos SET estado = ? WHERE id = ?`,
+      [estado, id]
+    );
+    console.log(`[trainingService] Estado del entrenamiento ${id} → '${estado}'. Filas: ${result.changes}`);
+    return result.changes;
+  } catch (error) {
+    console.error('[trainingService] Error al actualizar estado del entrenamiento:', error);
+    throw error;
+  }
+}
+
+/**
  * Registra o actualiza la asistencia de un jugador a un entrenamiento.
  * Usa INSERT OR REPLACE para simplificar el upsert.
  * @param {number} entrenamientoId

@@ -11,7 +11,20 @@ import HomeCoachScreen from '../screens/HomeCoachScreen';
 import HomePlayerScreen from '../screens/HomePlayerScreen';
 import HomeFanScreen from '../screens/HomeFanScreen';
 
+// Pantallas del entrenador
+import PlayerListScreen from '../screens/coach/PlayerListScreen';
+import PlayerFormScreen from '../screens/coach/PlayerFormScreen';
+import PlayerDetailScreen from '../screens/coach/PlayerDetailScreen';
+import MatchListScreen from '../screens/coach/MatchListScreen';
+import MatchFormScreen from '../screens/coach/MatchFormScreen';
+import MatchDetailScreen from '../screens/coach/MatchDetailScreen';
+import TrainingListScreen from '../screens/coach/TrainingListScreen';
+import TrainingFormScreen from '../screens/coach/TrainingFormScreen';
+import TrainingDetailScreen from '../screens/coach/TrainingDetailScreen';
+
 const Stack = createNativeStackNavigator();
+
+const COACH_COLOR = '#FF6F00';
 
 /**
  * Botón de cierre de sesión para el header de las pantallas Home.
@@ -25,6 +38,13 @@ function LogoutButton() {
     </TouchableOpacity>
   );
 }
+
+/** Opciones de header comunes para el stack del entrenador */
+const coachHeaderOptions = {
+  headerStyle: { backgroundColor: COACH_COLOR },
+  headerTintColor: '#fff',
+  headerTitleStyle: { fontWeight: 'bold' },
+};
 
 export default function AppNavigator() {
   const { isAuthenticated, role, isLoading } = useContext(AuthContext);
@@ -66,17 +86,76 @@ export default function AppNavigator() {
             }}
           />
         ) : role === 'coach' ? (
-          // ── Rol entrenador ───────────────────────────────────────────────────
-          <Stack.Screen
-            name="HomeCoach"
-            component={HomeCoachScreen}
-            options={{
-              title: 'Panel de Entrenador',
-              headerStyle: { backgroundColor: '#FF6F00' },
-              headerBackVisible: false,
-              headerRight: () => <LogoutButton />,
-            }}
-          />
+          // ── Stack del entrenador ─────────────────────────────────────────────
+          <>
+            <Stack.Screen
+              name="HomeCoach"
+              component={HomeCoachScreen}
+              options={{
+                title: 'Panel de Entrenador',
+                ...coachHeaderOptions,
+                headerBackVisible: false,
+                headerRight: () => <LogoutButton />,
+              }}
+            />
+            {/* Jugadores */}
+            <Stack.Screen
+              name="PlayerList"
+              component={PlayerListScreen}
+              options={{ title: 'Plantilla', ...coachHeaderOptions }}
+            />
+            <Stack.Screen
+              name="PlayerForm"
+              component={PlayerFormScreen}
+              options={({ route }) => ({
+                title: route.params?.playerId ? 'Editar jugador' : 'Nuevo jugador',
+                ...coachHeaderOptions,
+              })}
+            />
+            <Stack.Screen
+              name="PlayerDetail"
+              component={PlayerDetailScreen}
+              options={{ title: 'Ficha del jugador', ...coachHeaderOptions }}
+            />
+            {/* Partidos */}
+            <Stack.Screen
+              name="MatchList"
+              component={MatchListScreen}
+              options={{ title: 'Partidos', ...coachHeaderOptions }}
+            />
+            <Stack.Screen
+              name="MatchForm"
+              component={MatchFormScreen}
+              options={({ route }) => ({
+                title: route.params?.matchId ? 'Editar partido' : 'Nuevo partido',
+                ...coachHeaderOptions,
+              })}
+            />
+            <Stack.Screen
+              name="MatchDetail"
+              component={MatchDetailScreen}
+              options={{ title: 'Detalle del partido', ...coachHeaderOptions }}
+            />
+            {/* Entrenamientos */}
+            <Stack.Screen
+              name="TrainingList"
+              component={TrainingListScreen}
+              options={{ title: 'Entrenamientos', ...coachHeaderOptions }}
+            />
+            <Stack.Screen
+              name="TrainingForm"
+              component={TrainingFormScreen}
+              options={({ route }) => ({
+                title: route.params?.trainingId ? 'Editar entrenamiento' : 'Nuevo entrenamiento',
+                ...coachHeaderOptions,
+              })}
+            />
+            <Stack.Screen
+              name="TrainingDetail"
+              component={TrainingDetailScreen}
+              options={{ title: 'Detalle del entrenamiento', ...coachHeaderOptions }}
+            />
+          </>
         ) : role === 'player' ? (
           // ── Rol jugador ──────────────────────────────────────────────────────
           <Stack.Screen

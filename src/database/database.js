@@ -163,5 +163,13 @@ export async function initDatabase() {
     );
   `);
 
+  // Añadir columna sexo a jugadores si no existe (migración segura)
+  try {
+    await database.execAsync(`ALTER TABLE jugadores ADD COLUMN sexo TEXT;`);
+    console.log('[DB] Columna sexo añadida a jugadores.');
+  } catch {
+    // La columna ya existe — ignorar el error
+  }
+
   console.log('[DB] Base de datos inicializada correctamente.');
 }

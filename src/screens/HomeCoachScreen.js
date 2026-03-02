@@ -1,23 +1,14 @@
 import React, { useContext, useMemo } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Text, Surface, Card, Avatar, FAB, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
 import { usePlayers } from '../hooks/usePlayers';
 import { useTrainings } from '../hooks/useTrainings';
 import { useMatches } from '../hooks/useMatches';
+import { formatDate, formatTime } from '../utils/dateUtils';
 
-const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-
-function formatearFecha(fechaStr) {
-  // Convierte 'YYYY-MM-DD' en '8 mar'
-  if (!fechaStr) return '';
-  const partes = fechaStr.split('-');
-  if (partes.length < 3) return fechaStr;
-  return `${parseInt(partes[2])} ${MESES[parseInt(partes[1]) - 1]}`;
-}
-
-export default function HomeCoachScreen() {
+export default function HomeCoachScreen({ navigation }) {
   const { user, equipoId } = useContext(AuthContext);
 
   const { players, loading: loadingPlayers } = usePlayers(equipoId);
@@ -131,7 +122,7 @@ export default function HomeCoachScreen() {
                 <Card.Content>
                   <View style={styles.eventHeader}>
                     <Chip icon="calendar" style={styles.eventChip}>
-                      {formatearFecha(proximoEvento.fecha)}, {proximoEvento.hora}
+                      {formatDate(proximoEvento.fecha)}{proximoEvento.hora ? `, ${formatTime(proximoEvento.hora)}` : ''}
                     </Chip>
                     {proximoEvento.modalidad && (
                       <Chip icon="soccer-field" mode="outlined">
@@ -172,33 +163,57 @@ export default function HomeCoachScreen() {
               Acciones rápidas
             </Text>
             <View style={styles.actionsContainer}>
-              <Surface style={styles.actionCard} elevation={1}>
-                <Icon name="calendar-plus" size={40} color="#FF6F00" />
-                <Text variant="bodyMedium" style={styles.actionText}>
-                  Programar entrenamiento
-                </Text>
-              </Surface>
+              <TouchableOpacity
+                style={styles.actionCard}
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate('TrainingForm')}
+              >
+                <Surface style={styles.actionSurface} elevation={1}>
+                  <Icon name="calendar-plus" size={40} color="#FF6F00" />
+                  <Text variant="bodyMedium" style={styles.actionText}>
+                    Programar entrenamiento
+                  </Text>
+                </Surface>
+              </TouchableOpacity>
 
-              <Surface style={styles.actionCard} elevation={1}>
-                <Icon name="clipboard-text" size={40} color="#00AA13" />
-                <Text variant="bodyMedium" style={styles.actionText}>
-                  Ver alineación
-                </Text>
-              </Surface>
+              <TouchableOpacity
+                style={styles.actionCard}
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate('PlayerList')}
+              >
+                <Surface style={styles.actionSurface} elevation={1}>
+                  <Icon name="clipboard-text" size={40} color="#00AA13" />
+                  <Text variant="bodyMedium" style={styles.actionText}>
+                    Ver plantilla
+                  </Text>
+                </Surface>
+              </TouchableOpacity>
 
-              <Surface style={styles.actionCard} elevation={1}>
-                <Icon name="chart-line" size={40} color="#1E88E5" />
-                <Text variant="bodyMedium" style={styles.actionText}>
-                  Estadísticas
-                </Text>
-              </Surface>
+              <TouchableOpacity
+                style={styles.actionCard}
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate('MatchList')}
+              >
+                <Surface style={styles.actionSurface} elevation={1}>
+                  <Icon name="chart-line" size={40} color="#1E88E5" />
+                  <Text variant="bodyMedium" style={styles.actionText}>
+                    Partidos
+                  </Text>
+                </Surface>
+              </TouchableOpacity>
 
-              <Surface style={styles.actionCard} elevation={1}>
-                <Icon name="message-text" size={40} color="#9C27B0" />
-                <Text variant="bodyMedium" style={styles.actionText}>
-                  Mensajes
-                </Text>
-              </Surface>
+              <TouchableOpacity
+                style={styles.actionCard}
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate('TrainingList')}
+              >
+                <Surface style={styles.actionSurface} elevation={1}>
+                  <Icon name="dumbbell" size={40} color="#9C27B0" />
+                  <Text variant="bodyMedium" style={styles.actionText}>
+                    Entrenamientos
+                  </Text>
+                </Surface>
+              </TouchableOpacity>
             </View>
           </>
         )}
@@ -209,7 +224,8 @@ export default function HomeCoachScreen() {
         icon="plus"
         style={styles.fab}
         color="#FFFFFF"
-        label="Nueva tarea"
+        label="Nuevo partido"
+        onPress={() => navigation.navigate('MatchForm')}
       />
     </View>
   );
@@ -334,10 +350,15 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     width: '48%',
+  },
+  actionSurface: {
+    flex: 1,
     padding: 20,
     borderRadius: 12,
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#FFFFFF',
+    minHeight: 110,
   },
   actionText: {
     marginTop: 12,

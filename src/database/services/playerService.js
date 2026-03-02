@@ -6,7 +6,7 @@ import { getDatabase } from '../database';
 
 /**
  * Crea un nuevo jugador.
- * @param {{ usuario_id?, equipo_id, nombre, dorsal?, posicion?, fecha_nacimiento?,
+ * @param {{ usuario_id?, equipo_id, nombre, sexo?, dorsal?, posicion?, fecha_nacimiento?,
  *           altura?, peso?, pie_dominante?, foto_url?, activo? }} data
  * @returns {Promise<number>} ID del jugador creado
  */
@@ -15,13 +15,14 @@ export async function createPlayer(data) {
     const db = await getDatabase();
     const result = await db.runAsync(
       `INSERT INTO jugadores
-         (usuario_id, equipo_id, nombre, dorsal, posicion,
+         (usuario_id, equipo_id, nombre, sexo, dorsal, posicion,
           fecha_nacimiento, altura, peso, pie_dominante, foto_url, activo)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         data.usuario_id ?? null,
         data.equipo_id,
         data.nombre,
+        data.sexo ?? null,
         data.dorsal ?? null,
         data.posicion ?? null,
         data.fecha_nacimiento ?? null,
@@ -87,6 +88,7 @@ export async function updatePlayer(id, data) {
        SET usuario_id       = COALESCE(?, usuario_id),
            equipo_id        = COALESCE(?, equipo_id),
            nombre           = COALESCE(?, nombre),
+           sexo             = COALESCE(?, sexo),
            dorsal           = COALESCE(?, dorsal),
            posicion         = COALESCE(?, posicion),
            fecha_nacimiento = COALESCE(?, fecha_nacimiento),
@@ -100,6 +102,7 @@ export async function updatePlayer(id, data) {
         data.usuario_id ?? null,
         data.equipo_id ?? null,
         data.nombre ?? null,
+        data.sexo ?? null,
         data.dorsal ?? null,
         data.posicion ?? null,
         data.fecha_nacimiento ?? null,

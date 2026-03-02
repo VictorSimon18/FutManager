@@ -106,6 +106,61 @@ export async function updateMatchResult(id, golesFavor, golesContra) {
 }
 
 /**
+ * Obtiene un partido por su ID.
+ * @param {number} id
+ * @returns {Promise<object|null>}
+ */
+export async function getMatchById(id) {
+  try {
+    const db = await getDatabase();
+    return await db.getFirstAsync('SELECT * FROM partidos WHERE id = ?', [id]);
+  } catch (error) {
+    console.error('[matchService] Error al obtener partido:', error);
+    throw error;
+  }
+}
+
+/**
+ * Actualiza los datos de un partido.
+ * @param {number} id
+ * @param {object} data Campos a actualizar
+ * @returns {Promise<number>} Filas afectadas
+ */
+export async function updateMatch(id, data) {
+  try {
+    const db = await getDatabase();
+    const result = await db.runAsync(
+      `UPDATE partidos
+       SET rival      = COALESCE(?, rival),
+           fecha      = COALESCE(?, fecha),
+           hora       = COALESCE(?, hora),
+           ubicacion  = COALESCE(?, ubicacion),
+           tipo       = COALESCE(?, tipo),
+           modalidad  = COALESCE(?, modalidad),
+           es_local   = COALESCE(?, es_local),
+           notas      = COALESCE(?, notas)
+       WHERE id = ?`,
+      [
+        data.rival ?? null,
+        data.fecha ?? null,
+        data.hora ?? null,
+        data.ubicacion ?? null,
+        data.tipo ?? null,
+        data.modalidad ?? null,
+        data.es_local ?? null,
+        data.notas ?? null,
+        id,
+      ]
+    );
+    console.log(`[matchService] Partido ${id} actualizado. Filas: ${result.changes}`);
+    return result.changes;
+  } catch (error) {
+    console.error('[matchService] Error al actualizar partido:', error);
+    throw error;
+  }
+}
+
+/**
  * Elimina un partido por su ID.
  * @param {number} id
  * @returns {Promise<number>} Filas afectadas
