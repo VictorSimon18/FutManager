@@ -209,6 +209,40 @@ export async function registerAttendance(entrenamientoId, jugadorId, asistio, no
 }
 
 /**
+ * Obtiene la asistencia acumulada de un jugador a todos los entrenamientos del equipo.
+ * @param {number} jugadorId
+ * @param {number} equipoId
+ * @returns {Promise<{total: number, asistidos: number, porcentaje: number}>}
+ */
+export async function getPlayerAttendance(jugadorId, equipoId) {
+  try {
+    const db = await getDatabase();
+
+    const totalRow = await db.getFirstAsync(
+      `SELECT COUNT(*) AS total FROM entrenamientos WHERE equipo_id = ?`,
+      [equipoId]
+    );
+
+    const asistidosRow = await db.getFirstAsync(
+      `SELECT COUNT(*) AS asistidos
+       FROM asistencia_entrenamiento ae
+       INNER JOIN entrenamientos e ON ae.entrenamiento_id = e.id
+       WHERE ae.jugador_id = ? AND e.equipo_id = ? AND ae.asistio = 1`,
+      [jugadorId, equipoId]
+    );
+
+    const total = totalRow?.total ?? 0;
+    const asistidos = asistidosRow?.asistidos ?? 0;
+    const porcentaje = total > 0 ? Math.round((asistidos / total) * 100) : 0;
+
+    return { total, asistidos, porcentaje };
+  } catch (error) {
+    console.error('[trainingService] Error al obtener asistencia del jugador:', error);
+    throw error;
+  }
+}
+
+/**
  * Obtiene la lista de asistencia de un entrenamiento con datos de jugadores.
  * @param {number} entrenamientoId
  * @returns {Promise<object[]>}

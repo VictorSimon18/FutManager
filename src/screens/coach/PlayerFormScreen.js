@@ -4,6 +4,7 @@ import { Text, TextInput, Button, SegmentedButtons, HelperText } from 'react-nat
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { AuthContext } from '../../context/AuthContext';
 import { createPlayer, getPlayerById, updatePlayer } from '../../database/services/playerService';
+import { formatDate, parseDate } from '../../utils/dateUtils';
 
 const POSICIONES = [
   'Portero',
@@ -89,7 +90,8 @@ export default function PlayerFormScreen({ route, navigation }) {
       setSexo(p.sexo ?? 'Hombre');
       setDorsal(p.dorsal != null ? String(p.dorsal) : '');
       setPosicion(p.posicion ?? '');
-      setFechaNacimiento(p.fecha_nacimiento ?? '');
+      // Convertir fecha de almacenamiento YYYY-MM-DD a formato de visualización DD-MM-YYYY
+      setFechaNacimiento(p.fecha_nacimiento ? formatDate(p.fecha_nacimiento) : '');
       setAltura(p.altura != null ? String(p.altura) : '');
       setPeso(p.peso != null ? String(p.peso) : '');
       setPieDominante(p.pie_dominante ?? 'Derecho');
@@ -103,6 +105,9 @@ export default function PlayerFormScreen({ route, navigation }) {
     if (!nombre.trim()) e.nombre = 'El nombre es obligatorio.';
     if (dorsal && (isNaN(Number(dorsal)) || Number(dorsal) <= 0)) {
       e.dorsal = 'El dorsal debe ser un número positivo.';
+    }
+    if (fechaNacimiento && !/^\d{2}-\d{2}-\d{4}$/.test(fechaNacimiento)) {
+      e.fechaNacimiento = 'Formato incorrecto. Usa DD-MM-YYYY (ej: 15-03-2000).';
     }
     if (altura && isNaN(Number(altura))) e.altura = 'Introduce un valor válido.';
     if (peso && isNaN(Number(peso))) e.peso = 'Introduce un valor válido.';
@@ -120,7 +125,8 @@ export default function PlayerFormScreen({ route, navigation }) {
         sexo: sexo || null,
         dorsal: dorsal ? parseInt(dorsal) : null,
         posicion: posicion || null,
-        fecha_nacimiento: fechaNacimiento || null,
+        // Convertir DD-MM-YYYY a YYYY-MM-DD para guardar en SQLite
+        fecha_nacimiento: fechaNacimiento ? parseDate(fechaNacimiento) : null,
         altura: altura ? parseFloat(altura) : null,
         peso: peso ? parseFloat(peso) : null,
         pie_dominante: pieDominante || null,
@@ -165,14 +171,16 @@ export default function PlayerFormScreen({ route, navigation }) {
       />
 
       <TextInput
-        label="Fecha de nacimiento (YYYY-MM-DD)"
+        label="Fecha de nacimiento"
         value={fechaNacimiento}
         onChangeText={setFechaNacimiento}
         mode="outlined"
         style={styles.input}
-        placeholder="2000-01-15"
+        placeholder="DD-MM-YYYY"
         keyboardType="numeric"
+        error={!!errors.fechaNacimiento}
       />
+      <HelperText type="error" visible={!!errors.fechaNacimiento}>{errors.fechaNacimiento}</HelperText>
 
       <SectionTitle text="Datos deportivos" />
 
@@ -252,7 +260,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 12 },
   halfInput: { flex: 1 },
   segmented: { marginBottom: 8 },
-  // Grid de posiciones con chips táctiles
   posicionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   posicionBtn: {
     borderWidth: 1,

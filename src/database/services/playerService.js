@@ -50,7 +50,26 @@ export async function getPlayersByTeam(equipoId) {
   try {
     const db = await getDatabase();
     return await db.getAllAsync(
-      `SELECT * FROM jugadores WHERE equipo_id = ? AND activo = 1 ORDER BY dorsal ASC`,
+      `SELECT * FROM jugadores
+       WHERE equipo_id = ? AND activo = 1
+       ORDER BY
+         CASE posicion
+           WHEN 'Portero'               THEN 1
+           WHEN 'Defensa Central'       THEN 10
+           WHEN 'Lateral Derecho'       THEN 11
+           WHEN 'Lateral Izquierdo'     THEN 12
+           WHEN 'Carrilero Derecho'     THEN 13
+           WHEN 'Carrilero Izquierdo'   THEN 14
+           WHEN 'Líbero'                THEN 19
+           WHEN 'Mediocentro Defensivo' THEN 20
+           WHEN 'Mediocentro'           THEN 21
+           WHEN 'Mediapunta'            THEN 22
+           WHEN 'Extremo Izquierdo'     THEN 30
+           WHEN 'Extremo Derecho'       THEN 31
+           WHEN 'Delantero'             THEN 32
+           ELSE 99
+         END,
+         dorsal ASC`,
       [equipoId]
     );
   } catch (error) {

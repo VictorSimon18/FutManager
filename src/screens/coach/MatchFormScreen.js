@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView, Alert, Switch } from 'react-native';
 import { Text, TextInput, Button, SegmentedButtons, HelperText } from 'react-native-paper';
 import { AuthContext } from '../../context/AuthContext';
 import { createMatch, getMatchById, updateMatch } from '../../database/services/matchService';
+import { formatDate, formatTime, parseDate, parseTime } from '../../utils/dateUtils';
 
 const TIPOS = [
   { value: 'liga', label: 'Liga' },
@@ -47,8 +48,9 @@ export default function MatchFormScreen({ route, navigation }) {
       const m = await getMatchById(matchId);
       if (!m) return;
       setRival(m.rival ?? '');
-      setFecha(m.fecha ?? '');
-      setHora(m.hora ?? '');
+      // Convertir formatos de almacenamiento a formatos de visualización
+      setFecha(m.fecha ? formatDate(m.fecha) : '');
+      setHora(m.hora ? formatTime(m.hora) : '');
       setUbicacion(m.ubicacion ?? '');
       setTipo(m.tipo ?? 'liga');
       setModalidad(m.modalidad ?? '11 vs 11');
@@ -62,7 +64,11 @@ export default function MatchFormScreen({ route, navigation }) {
   function validate() {
     const e = {};
     if (!rival.trim()) e.rival = 'El rival es obligatorio.';
-    if (!fecha.trim()) e.fecha = 'La fecha es obligatoria.';
+    if (!fecha.trim()) {
+      e.fecha = 'La fecha es obligatoria.';
+    } else if (!/^\d{2}-\d{2}-\d{4}$/.test(fecha.trim())) {
+      e.fecha = 'Formato incorrecto. Usa DD-MM-YYYY (ej: 15-03-2026).';
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -74,8 +80,9 @@ export default function MatchFormScreen({ route, navigation }) {
       const data = {
         equipo_id: equipoId,
         rival: rival.trim(),
-        fecha: fecha.trim(),
-        hora: hora || null,
+        // Convertir DD-MM-YYYY → YYYY-MM-DD y HH.MM → HH:MM para SQLite
+        fecha: parseDate(fecha.trim()),
+        hora: hora ? parseTime(hora) : null,
         ubicacion: ubicacion || null,
         tipo,
         modalidad,
@@ -111,22 +118,22 @@ export default function MatchFormScreen({ route, navigation }) {
 
       <View style={styles.row}>
         <TextInput
-          label="Fecha * (YYYY-MM-DD)"
+          label="Fecha *"
           value={fecha}
           onChangeText={setFecha}
           mode="outlined"
           style={[styles.input, styles.flex2]}
-          placeholder="2026-03-15"
+          placeholder="DD-MM-YYYY"
           keyboardType="numeric"
           error={!!errors.fecha}
         />
         <TextInput
-          label="Hora (HH:MM)"
+          label="Hora"
           value={hora}
           onChangeText={setHora}
           mode="outlined"
           style={[styles.input, styles.flex1]}
-          placeholder="18:00"
+          placeholder="HH.MM"
           keyboardType="numeric"
         />
       </View>

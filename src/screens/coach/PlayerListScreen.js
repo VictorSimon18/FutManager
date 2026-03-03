@@ -5,24 +5,9 @@ import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { AuthContext } from '../../context/AuthContext';
 import { usePlayers } from '../../hooks/usePlayers';
 import { deletePlayer } from '../../database/services/playerService';
+import { getPositionColor } from '../../utils/positionUtils';
 import EmptyState from '../../components/EmptyState';
 import ConfirmDialog from '../../components/ConfirmDialog';
-
-const POSICION_COLOR = {
-  'Portero': '#1E88E5',
-  'Defensa Central': '#43A047',
-  'Lateral Derecho': '#43A047',
-  'Lateral Izquierdo': '#43A047',
-  'Carrilero Derecho': '#43A047',
-  'Carrilero Izquierdo': '#43A047',
-  'Mediocentro Defensivo': '#FF6F00',
-  'Mediocentro': '#FF6F00',
-  'Mediapunta': '#FF6F00',
-  'Extremo Derecho': '#E53935',
-  'Extremo Izquierdo': '#E53935',
-  'Delantero': '#E53935',
-  'Líbero': '#9C27B0',
-};
 
 function getInitials(nombre) {
   if (!nombre) return '?';
@@ -32,12 +17,12 @@ function getInitials(nombre) {
 }
 
 function PlayerCard({ player, onPress, onDelete }) {
-  const color = POSICION_COLOR[player.posicion] ?? '#757575';
+  const color = getPositionColor(player.posicion);
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
-      <Card style={styles.card}>
+      <Card style={[styles.card, { borderLeftColor: color }]}>
         <Card.Content style={styles.cardContent}>
-          {/* Avatar con iniciales */}
+          {/* Avatar con iniciales y color por posición */}
           <Avatar.Text
             size={48}
             label={getInitials(player.nombre)}
@@ -57,10 +42,10 @@ function PlayerCard({ player, onPress, onDelete }) {
               ) : null}
             </View>
           </View>
-          {/* Dorsal con tamaño fijo para evitar solapamientos */}
+          {/* Dorsal con fondo coloreado por posición */}
           {player.dorsal != null && (
-            <View style={styles.dorsalBadge}>
-              <Text style={styles.dorsalText}>#{player.dorsal}</Text>
+            <View style={[styles.dorsalBadge, { backgroundColor: color + '20', borderColor: color + '60' }]}>
+              <Text style={[styles.dorsalText, { color }]}>#{player.dorsal}</Text>
             </View>
           )}
           {/* Botón eliminar */}
@@ -86,6 +71,7 @@ export default function PlayerListScreen({ navigation }) {
     return unsub;
   }, [navigation, refresh]);
 
+  // Los jugadores ya vienen ordenados por posición desde la query SQL
   const filtered = players.filter(p =>
     p.nombre.toLowerCase().includes(query.toLowerCase())
   );
@@ -168,8 +154,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    borderTopWidth: 3,
-    borderTopColor: '#FF6F00',
+    borderLeftWidth: 4,
   },
   cardContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   cardInfo: { flex: 1, minWidth: 0 },
@@ -177,7 +162,7 @@ const styles = StyleSheet.create({
   cardMeta: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
   posicion: { fontWeight: '600' },
   dorsalBadge: {
-    backgroundColor: '#FFF3E0',
+    borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -185,7 +170,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dorsalText: {
-    color: '#FF6F00',
     fontWeight: 'bold',
     fontSize: 13,
   },

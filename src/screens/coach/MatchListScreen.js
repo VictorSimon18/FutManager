@@ -158,6 +158,6 @@ const styles = StyleSheet.create({
   metaText: { color: '#888', flexShrink: 1 },
   score: { fontWeight: 'bold', lineHeight: 36 },
   chipsRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginTop: 4 },
-  chip: { backgroundColor: '#F5F5F5', height: 26 },
+  chip: { backgroundColor: '#F5F5F5' },
   fab: { position: 'absolute', right: 20, bottom: 20, backgroundColor: '#FF6F00' },
 });

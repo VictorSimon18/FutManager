@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { View, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import {
   Text, Card, Button, Chip, Divider, ActivityIndicator,
-  TextInput, Dialog, Portal, Switch,
+  TextInput, Dialog, Portal, Switch, Snackbar,
 } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { getMatchById, updateMatchResult, deleteMatch } from '../../database/services/matchService';
@@ -13,8 +13,17 @@ import { formatDate, formatTime } from '../../utils/dateUtils';
 import StatBadge from '../../components/StatBadge';
 import ConfirmDialog from '../../components/ConfirmDialog';
 
-// ─── Estilos compartidos para todos los Dialogs ───────────────────────────────
 const DIALOG_STYLE = { borderRadius: 8 };
+
+// Sección con título dentro del formulario de estadísticas
+function StatsSection({ title }) {
+  return (
+    <View style={styles.statsSection}>
+      <Text variant="labelSmall" style={styles.statsSectionTitle}>{title}</Text>
+      <Divider style={styles.statsSectionDivider} />
+    </View>
+  );
+}
 
 export default function MatchDetailScreen({ route, navigation }) {
   const { matchId } = route.params;
@@ -37,14 +46,31 @@ export default function MatchDetailScreen({ route, navigation }) {
   // ── Modal estadísticas: paso 2 (formulario de stats) ─────────────────────────
   const [statsFormModal, setStatsFormModal] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [stMinutos, setStMinutos] = useState('90');
-  const [stGoles, setStGoles] = useState('0');
-  const [stAsistencias, setStAsistencias] = useState('0');
-  const [stAmarillas, setStAmarillas] = useState('0');
-  const [stRojas, setStRojas] = useState('0');
+
+  // Stats generales
+  const [stMinutos, setStMinutos] = useState('');
   const [stTitular, setStTitular] = useState(true);
+  const [stPasesClave, setStPasesClave] = useState('');
   const [stValoracion, setStValoracion] = useState('');
+  // Stats ataque
+  const [stGoles, setStGoles] = useState('');
+  const [stAsistencias, setStAsistencias] = useState('');
+  const [stTirosPuerta, setStTirosPuerta] = useState('');
+  const [stTirosFuera, setStTirosFuera] = useState('');
+  const [stFuerasJuego, setStFuerasJuego] = useState('');
+  // Stats defensa
+  const [stEntradas, setStEntradas] = useState('');
+  const [stDespejes, setStDespejes] = useState('');
+  const [stParadas, setStParadas] = useState('');
+  // Stats disciplina
+  const [stAmarillas, setStAmarillas] = useState('');
+  const [stRojas, setStRojas] = useState('');
+  const [stFaltasCometidas, setStFaltasCometidas] = useState('');
+  const [stFaltasRecibidas, setStFaltasRecibidas] = useState('');
+
   const [savingStats, setSavingStats] = useState(false);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMsg, setSnackbarMsg] = useState('');
 
   const load = useCallback(async () => {
     try {
@@ -93,13 +119,23 @@ export default function MatchDetailScreen({ route, navigation }) {
   // ── Seleccionar jugador para estadísticas ─────────────────────────────────────
   function handleSelectPlayer(player) {
     setSelectedPlayer(player);
-    setStMinutos('90');
-    setStGoles('0');
-    setStAsistencias('0');
-    setStAmarillas('0');
-    setStRojas('0');
+    // Resetear todos los campos a vacío (se muestran placeholders)
+    setStMinutos('');
     setStTitular(true);
+    setStPasesClave('');
     setStValoracion('');
+    setStGoles('');
+    setStAsistencias('');
+    setStTirosPuerta('');
+    setStTirosFuera('');
+    setStFuerasJuego('');
+    setStEntradas('');
+    setStDespejes('');
+    setStParadas('');
+    setStAmarillas('');
+    setStRojas('');
+    setStFaltasCometidas('');
+    setStFaltasRecibidas('');
     setStatsListModal(false);
     setStatsFormModal(true);
   }
@@ -109,20 +145,42 @@ export default function MatchDetailScreen({ route, navigation }) {
     if (!selectedPlayer) return;
     setSavingStats(true);
     try {
+      const amarillas = parseInt(stAmarillas) || 0;
+      let rojas = parseInt(stRojas) || 0;
+
+      // Lógica: 2 amarillas = 1 roja automática
+      if (amarillas >= 2) {
+        rojas = Math.max(rojas, 1);
+      }
+
       await createPlayerStats({
         jugador_id: selectedPlayer.id,
         partido_id: matchId,
         minutos_jugados: parseInt(stMinutos) || 0,
+        titular: stTitular ? 1 : 0,
+        pases_clave: parseInt(stPasesClave) || 0,
+        valoracion: stValoracion ? parseFloat(stValoracion) : null,
         goles: parseInt(stGoles) || 0,
         asistencias: parseInt(stAsistencias) || 0,
-        tarjetas_amarillas: parseInt(stAmarillas) || 0,
-        tarjetas_rojas: parseInt(stRojas) || 0,
-        titular: stTitular ? 1 : 0,
-        valoracion: stValoracion ? parseFloat(stValoracion) : null,
+        tiros_puerta: parseInt(stTirosPuerta) || 0,
+        tiros_fuera: parseInt(stTirosFuera) || 0,
+        fueras_juego: parseInt(stFuerasJuego) || 0,
+        entradas: parseInt(stEntradas) || 0,
+        despejes: parseInt(stDespejes) || 0,
+        paradas: parseInt(stParadas) || 0,
+        tarjetas_amarillas: amarillas,
+        tarjetas_rojas: rojas,
+        faltas_cometidas: parseInt(stFaltasCometidas) || 0,
+        faltas_recibidas: parseInt(stFaltasRecibidas) || 0,
       });
       setStatsFormModal(false);
       setSelectedPlayer(null);
       load();
+
+      if (amarillas >= 2) {
+        setSnackbarMsg('2 amarillas = expulsión (roja automática añadida)');
+        setSnackbarVisible(true);
+      }
     } catch (e) {
       Alert.alert('Error', 'No se pudo guardar las estadísticas.');
     } finally {
@@ -167,6 +225,9 @@ export default function MatchDetailScreen({ route, navigation }) {
     else if (gF < gC) { resultColor = '#E53935'; resultLabel = 'Derrota'; }
     else { resultColor = '#FF6F00'; resultLabel = 'Empate'; }
   }
+
+  const isPortero = selectedPlayer?.posicion === 'Portero';
+  const amarillasNum = parseInt(stAmarillas) || 0;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -236,26 +297,35 @@ export default function MatchDetailScreen({ route, navigation }) {
             </View>
             {stats.length === 0 ? (
               <Text variant="bodySmall" style={styles.emptyText}>Sin estadísticas registradas.</Text>
-            ) : stats.map(s => (
-              <View key={s.id} style={styles.statRow}>
-                <View style={styles.statPlayer}>
-                  <Text variant="bodyMedium" style={styles.statName}>{s.nombre}</Text>
-                  <Text variant="bodySmall" style={styles.statMeta}>
-                    {s.posicion}  ·  #{s.dorsal}  ·  {s.minutos_jugados}'
-                  </Text>
+            ) : stats.map(s => {
+              // Mostrar tarjeta roja si 2+ amarillas aunque no tenga roja directa registrada
+              const mostrarRoja = s.tarjetas_rojas > 0 || s.tarjetas_amarillas >= 2;
+              return (
+                <View key={s.id} style={styles.statRow}>
+                  <View style={styles.statPlayer}>
+                    <Text variant="bodyMedium" style={styles.statName}>{s.nombre}</Text>
+                    <Text variant="bodySmall" style={styles.statMeta}>
+                      {s.posicion}  ·  #{s.dorsal}  ·  {s.minutos_jugados}'
+                    </Text>
+                  </View>
+                  <View style={styles.statBadges}>
+                    <StatBadge icon="soccer" value={s.goles} color="#43A047" />
+                    <StatBadge icon="hand-okay" value={s.asistencias} color="#FF6F00" />
+                    {s.tarjetas_amarillas > 0 && (
+                      <StatBadge icon="card-text" value={s.tarjetas_amarillas} color="#FDD835" />
+                    )}
+                    {mostrarRoja && (
+                      <StatBadge icon="card-text" value={1} color="#E53935" />
+                    )}
+                  </View>
                 </View>
-                <View style={styles.statBadges}>
-                  <StatBadge icon="soccer" value={s.goles} color="#43A047" />
-                  <StatBadge icon="hand-okay" value={s.asistencias} color="#FF6F00" />
-                  <StatBadge icon="card-text" value={s.tarjetas_amarillas} color="#FDD835" />
-                </View>
-              </View>
-            ))}
+              );
+            })}
           </Card.Content>
         </Card>
       )}
 
-      {/* Botones editar / eliminar / guardar */}
+      {/* Botones editar / eliminar */}
       <View style={styles.bottomActions}>
         <Button
           mode="outlined"
@@ -277,7 +347,6 @@ export default function MatchDetailScreen({ route, navigation }) {
         </Button>
       </View>
 
-      {/* Botón Guardar partido */}
       <Button
         mode="contained"
         icon="content-save"
@@ -372,28 +441,184 @@ export default function MatchDetailScreen({ route, navigation }) {
           <Dialog.Title>
             {selectedPlayer?.nombre ?? 'Estadísticas'}
           </Dialog.Title>
-          <Dialog.Content>
-            <Text variant="bodySmall" style={styles.fieldLabel}>Titular</Text>
-            <View style={styles.switchRow}>
-              <Text variant="bodyMedium">{stTitular ? 'Titular' : 'Suplente'}</Text>
-              <Switch
-                value={stTitular}
-                onValueChange={setStTitular}
-                trackColor={{ true: '#FF6F00', false: '#BDBDBD' }}
-                thumbColor="#fff"
-              />
-            </View>
-            <View style={styles.statsInputRow}>
-              <TextInput label="Minutos" value={stMinutos} onChangeText={setStMinutos} mode="outlined" keyboardType="numeric" style={styles.miniInput} />
-              <TextInput label="Goles" value={stGoles} onChangeText={setStGoles} mode="outlined" keyboardType="numeric" style={styles.miniInput} />
-              <TextInput label="Asist." value={stAsistencias} onChangeText={setStAsistencias} mode="outlined" keyboardType="numeric" style={styles.miniInput} />
-            </View>
-            <View style={[styles.statsInputRow, { marginTop: 8 }]}>
-              <TextInput label="Amarillas" value={stAmarillas} onChangeText={setStAmarillas} mode="outlined" keyboardType="numeric" style={styles.miniInput} />
-              <TextInput label="Rojas" value={stRojas} onChangeText={setStRojas} mode="outlined" keyboardType="numeric" style={styles.miniInput} />
-              <TextInput label="Valoración" value={stValoracion} onChangeText={setStValoracion} mode="outlined" keyboardType="decimal-pad" style={styles.miniInput} placeholder="1-10" />
-            </View>
-          </Dialog.Content>
+          <Dialog.ScrollArea style={styles.statsScrollArea}>
+            <ScrollView>
+              {/* ── General ── */}
+              <StatsSection title="GENERAL" />
+              <View style={styles.switchRow}>
+                <Text variant="bodyMedium">{stTitular ? 'Titular' : 'Suplente'}</Text>
+                <Switch
+                  value={stTitular}
+                  onValueChange={setStTitular}
+                  trackColor={{ true: '#FF6F00', false: '#BDBDBD' }}
+                  thumbColor="#fff"
+                />
+              </View>
+              <View style={styles.statsInputRow}>
+                <TextInput
+                  label="Minutos"
+                  value={stMinutos}
+                  onChangeText={setStMinutos}
+                  mode="outlined"
+                  keyboardType="numeric"
+                  style={styles.miniInput}
+                  placeholder="Ej: 90"
+                />
+                <TextInput
+                  label="Pases clave"
+                  value={stPasesClave}
+                  onChangeText={setStPasesClave}
+                  mode="outlined"
+                  keyboardType="numeric"
+                  style={styles.miniInput}
+                  placeholder="Ej: 2"
+                />
+                <TextInput
+                  label="Valoración"
+                  value={stValoracion}
+                  onChangeText={setStValoracion}
+                  mode="outlined"
+                  keyboardType="decimal-pad"
+                  style={styles.miniInput}
+                  placeholder="Ej: 7.5"
+                />
+              </View>
+
+              {/* ── Ataque ── */}
+              <StatsSection title="ATAQUE" />
+              <View style={styles.statsInputRow}>
+                <TextInput
+                  label="Goles"
+                  value={stGoles}
+                  onChangeText={setStGoles}
+                  mode="outlined"
+                  keyboardType="numeric"
+                  style={styles.miniInput}
+                  placeholder="Ej: 0"
+                />
+                <TextInput
+                  label="Asistencias"
+                  value={stAsistencias}
+                  onChangeText={setStAsistencias}
+                  mode="outlined"
+                  keyboardType="numeric"
+                  style={styles.miniInput}
+                  placeholder="Ej: 1"
+                />
+              </View>
+              <View style={[styles.statsInputRow, { marginTop: 8 }]}>
+                <TextInput
+                  label="Tiros puerta"
+                  value={stTirosPuerta}
+                  onChangeText={setStTirosPuerta}
+                  mode="outlined"
+                  keyboardType="numeric"
+                  style={styles.miniInput}
+                  placeholder="Ej: 3"
+                />
+                <TextInput
+                  label="Tiros fuera"
+                  value={stTirosFuera}
+                  onChangeText={setStTirosFuera}
+                  mode="outlined"
+                  keyboardType="numeric"
+                  style={styles.miniInput}
+                  placeholder="Ej: 1"
+                />
+                <TextInput
+                  label="Fuera de juego"
+                  value={stFuerasJuego}
+                  onChangeText={setStFuerasJuego}
+                  mode="outlined"
+                  keyboardType="numeric"
+                  style={styles.miniInput}
+                  placeholder="Ej: 0"
+                />
+              </View>
+
+              {/* ── Defensa ── */}
+              <StatsSection title="DEFENSA" />
+              <View style={styles.statsInputRow}>
+                <TextInput
+                  label="Entradas"
+                  value={stEntradas}
+                  onChangeText={setStEntradas}
+                  mode="outlined"
+                  keyboardType="numeric"
+                  style={styles.miniInput}
+                  placeholder="Ej: 2"
+                />
+                <TextInput
+                  label="Despejes"
+                  value={stDespejes}
+                  onChangeText={setStDespejes}
+                  mode="outlined"
+                  keyboardType="numeric"
+                  style={styles.miniInput}
+                  placeholder="Ej: 4"
+                />
+                {isPortero && (
+                  <TextInput
+                    label="Paradas"
+                    value={stParadas}
+                    onChangeText={setStParadas}
+                    mode="outlined"
+                    keyboardType="numeric"
+                    style={styles.miniInput}
+                    placeholder="Ej: 5"
+                  />
+                )}
+              </View>
+
+              {/* ── Disciplina ── */}
+              <StatsSection title="DISCIPLINA" />
+              <View style={styles.statsInputRow}>
+                <TextInput
+                  label="Amarillas"
+                  value={stAmarillas}
+                  onChangeText={setStAmarillas}
+                  mode="outlined"
+                  keyboardType="numeric"
+                  style={styles.miniInput}
+                  placeholder="Ej: 0"
+                />
+                <TextInput
+                  label="Rojas"
+                  value={stRojas}
+                  onChangeText={setStRojas}
+                  mode="outlined"
+                  keyboardType="numeric"
+                  style={styles.miniInput}
+                  placeholder="Ej: 0"
+                />
+              </View>
+              {amarillasNum >= 2 && (
+                <Text variant="bodySmall" style={styles.warningText}>
+                  ⚠️ 2 amarillas = expulsión (roja automática al guardar)
+                </Text>
+              )}
+              <View style={[styles.statsInputRow, { marginTop: 8 }]}>
+                <TextInput
+                  label="Faltas comet."
+                  value={stFaltasCometidas}
+                  onChangeText={setStFaltasCometidas}
+                  mode="outlined"
+                  keyboardType="numeric"
+                  style={styles.miniInput}
+                  placeholder="Ej: 2"
+                />
+                <TextInput
+                  label="Faltas recib."
+                  value={stFaltasRecibidas}
+                  onChangeText={setStFaltasRecibidas}
+                  mode="outlined"
+                  keyboardType="numeric"
+                  style={styles.miniInput}
+                  placeholder="Ej: 3"
+                />
+              </View>
+            </ScrollView>
+          </Dialog.ScrollArea>
           <Dialog.Actions>
             <Button onPress={handleBackToList} textColor="#D32F2F">Cancelar</Button>
             <Button onPress={handleSaveStats} loading={savingStats} textColor="#00AA13">Guardar</Button>
@@ -410,6 +635,16 @@ export default function MatchDetailScreen({ route, navigation }) {
         onConfirm={handleDelete}
         onDismiss={() => setConfirmDelete(false)}
       />
+
+      {/* Snackbar para avisos (ej: 2 amarillas = roja automática) */}
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={3000}
+        style={styles.snackbar}
+      >
+        {snackbarMsg}
+      </Snackbar>
     </ScrollView>
   );
 }
@@ -456,8 +691,13 @@ const styles = StyleSheet.create({
   playerListName: { fontWeight: '600', color: '#1A1A1A' },
   playerListMeta: { color: '#999', marginTop: 2 },
   // Modal formulario stats
-  fieldLabel: { color: '#555', marginBottom: 4 },
+  statsScrollArea: { maxHeight: 420 },
+  statsSection: { marginTop: 16, marginBottom: 4 },
+  statsSectionTitle: { color: '#FF6F00', fontWeight: 'bold', letterSpacing: 1 },
+  statsSectionDivider: { marginTop: 4, backgroundColor: '#FF6F0030' },
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   statsInputRow: { flexDirection: 'row', gap: 8 },
   miniInput: { flex: 1, backgroundColor: '#fff' },
+  warningText: { color: '#E65100', marginTop: 6, marginBottom: 4 },
+  snackbar: { backgroundColor: '#333' },
 });

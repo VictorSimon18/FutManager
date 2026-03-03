@@ -7,7 +7,9 @@ import { getDatabase } from '../database';
 /**
  * Crea un registro de estadísticas para un jugador en un partido.
  * @param {{ jugador_id, partido_id, minutos_jugados?, goles?, asistencias?,
- *           tarjetas_amarillas?, tarjetas_rojas?, titular?, valoracion? }} data
+ *           tarjetas_amarillas?, tarjetas_rojas?, titular?, valoracion?,
+ *           paradas?, despejes?, entradas?, pases_clave?, tiros_puerta?,
+ *           tiros_fuera?, faltas_cometidas?, faltas_recibidas?, fueras_juego? }} data
  * @returns {Promise<number>} ID del registro creado
  */
 export async function createPlayerStats(data) {
@@ -16,8 +18,10 @@ export async function createPlayerStats(data) {
     const result = await db.runAsync(
       `INSERT INTO estadisticas_jugador
          (jugador_id, partido_id, minutos_jugados, goles, asistencias,
-          tarjetas_amarillas, tarjetas_rojas, titular, valoracion)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          tarjetas_amarillas, tarjetas_rojas, titular, valoracion,
+          paradas, despejes, entradas, pases_clave,
+          tiros_puerta, tiros_fuera, faltas_cometidas, faltas_recibidas, fueras_juego)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         data.jugador_id,
         data.partido_id,
@@ -28,6 +32,15 @@ export async function createPlayerStats(data) {
         data.tarjetas_rojas ?? 0,
         data.titular ?? 0,
         data.valoracion ?? null,
+        data.paradas ?? 0,
+        data.despejes ?? 0,
+        data.entradas ?? 0,
+        data.pases_clave ?? 0,
+        data.tiros_puerta ?? 0,
+        data.tiros_fuera ?? 0,
+        data.faltas_cometidas ?? 0,
+        data.faltas_recibidas ?? 0,
+        data.fueras_juego ?? 0,
       ]
     );
     console.log(`[statsService] Estadística creada con ID: ${result.lastInsertRowId}`);
@@ -99,7 +112,16 @@ export async function getSeasonStats(jugadorId) {
          SUM(tarjetas_amarillas)     AS total_amarillas,
          SUM(tarjetas_rojas)         AS total_rojas,
          SUM(titular)                AS veces_titular,
-         AVG(valoracion)             AS valoracion_media
+         AVG(valoracion)             AS valoracion_media,
+         SUM(paradas)                AS total_paradas,
+         SUM(despejes)               AS total_despejes,
+         SUM(entradas)               AS total_entradas,
+         SUM(pases_clave)            AS total_pases_clave,
+         SUM(tiros_puerta)           AS total_tiros_puerta,
+         SUM(tiros_fuera)            AS total_tiros_fuera,
+         SUM(faltas_cometidas)       AS total_faltas_cometidas,
+         SUM(faltas_recibidas)       AS total_faltas_recibidas,
+         SUM(fueras_juego)           AS total_fueras_juego
        FROM estadisticas_jugador
        WHERE jugador_id = ?`,
       [jugadorId]
@@ -127,7 +149,16 @@ export async function updateStats(id, data) {
            tarjetas_amarillas = COALESCE(?, tarjetas_amarillas),
            tarjetas_rojas     = COALESCE(?, tarjetas_rojas),
            titular            = COALESCE(?, titular),
-           valoracion         = COALESCE(?, valoracion)
+           valoracion         = COALESCE(?, valoracion),
+           paradas            = COALESCE(?, paradas),
+           despejes           = COALESCE(?, despejes),
+           entradas           = COALESCE(?, entradas),
+           pases_clave        = COALESCE(?, pases_clave),
+           tiros_puerta       = COALESCE(?, tiros_puerta),
+           tiros_fuera        = COALESCE(?, tiros_fuera),
+           faltas_cometidas   = COALESCE(?, faltas_cometidas),
+           faltas_recibidas   = COALESCE(?, faltas_recibidas),
+           fueras_juego       = COALESCE(?, fueras_juego)
        WHERE id = ?`,
       [
         data.minutos_jugados ?? null,
@@ -137,6 +168,15 @@ export async function updateStats(id, data) {
         data.tarjetas_rojas ?? null,
         data.titular ?? null,
         data.valoracion ?? null,
+        data.paradas ?? null,
+        data.despejes ?? null,
+        data.entradas ?? null,
+        data.pases_clave ?? null,
+        data.tiros_puerta ?? null,
+        data.tiros_fuera ?? null,
+        data.faltas_cometidas ?? null,
+        data.faltas_recibidas ?? null,
+        data.fueras_juego ?? null,
         id,
       ]
     );

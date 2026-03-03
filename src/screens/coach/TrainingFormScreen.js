@@ -3,8 +3,7 @@ import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Text, TextInput, Button, SegmentedButtons, HelperText } from 'react-native-paper';
 import { AuthContext } from '../../context/AuthContext';
 import { createTraining, getTrainingById, updateTraining } from '../../database/services/trainingService';
-// Nota: las fechas/horas se muestran tal como las introduce el usuario (YYYY-MM-DD / HH:MM).
-// El formateo DD-MM-YYYY y HH.MM se aplica solo en pantallas de solo lectura (detail/list).
+import { formatDate, formatTime, parseDate, parseTime } from '../../utils/dateUtils';
 
 const TIPOS = [
   { value: 'Técnico', label: 'Técnico' },
@@ -43,9 +42,10 @@ export default function TrainingFormScreen({ route, navigation }) {
     try {
       const t = await getTrainingById(trainingId);
       if (!t) return;
-      setFecha(t.fecha ?? '');
-      setHoraInicio(t.hora_inicio ?? '');
-      setHoraFin(t.hora_fin ?? '');
+      // Convertir formatos de almacenamiento a formatos de visualización
+      setFecha(t.fecha ? formatDate(t.fecha) : '');
+      setHoraInicio(t.hora_inicio ? formatTime(t.hora_inicio) : '');
+      setHoraFin(t.hora_fin ? formatTime(t.hora_fin) : '');
       setUbicacion(t.ubicacion ?? '');
       setTipo(t.tipo ?? 'Técnico');
       setDescripcion(t.descripcion ?? '');
@@ -56,7 +56,11 @@ export default function TrainingFormScreen({ route, navigation }) {
 
   function validate() {
     const e = {};
-    if (!fecha.trim()) e.fecha = 'La fecha es obligatoria.';
+    if (!fecha.trim()) {
+      e.fecha = 'La fecha es obligatoria.';
+    } else if (!/^\d{2}-\d{2}-\d{4}$/.test(fecha.trim())) {
+      e.fecha = 'Formato incorrecto. Usa DD-MM-YYYY (ej: 20-03-2026).';
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -67,9 +71,10 @@ export default function TrainingFormScreen({ route, navigation }) {
     try {
       const data = {
         equipo_id: equipoId,
-        fecha: fecha.trim(),
-        hora_inicio: horaInicio || null,
-        hora_fin: horaFin || null,
+        // Convertir DD-MM-YYYY → YYYY-MM-DD y HH.MM → HH:MM para SQLite
+        fecha: parseDate(fecha.trim()),
+        hora_inicio: horaInicio ? parseTime(horaInicio) : null,
+        hora_fin: horaFin ? parseTime(horaFin) : null,
         ubicacion: ubicacion || null,
         tipo: tipo || null,
         descripcion: descripcion || null,
@@ -92,12 +97,12 @@ export default function TrainingFormScreen({ route, navigation }) {
 
       <SectionTitle text="Fecha y hora" />
       <TextInput
-        label="Fecha * (YYYY-MM-DD)"
+        label="Fecha *"
         value={fecha}
         onChangeText={setFecha}
         mode="outlined"
         style={styles.input}
-        placeholder="2026-03-20"
+        placeholder="DD-MM-YYYY"
         keyboardType="numeric"
         error={!!errors.fecha}
       />
@@ -110,7 +115,7 @@ export default function TrainingFormScreen({ route, navigation }) {
           onChangeText={setHoraInicio}
           mode="outlined"
           style={[styles.input, styles.half]}
-          placeholder="18:00"
+          placeholder="HH.MM"
           keyboardType="numeric"
         />
         <TextInput
@@ -119,7 +124,7 @@ export default function TrainingFormScreen({ route, navigation }) {
           onChangeText={setHoraFin}
           mode="outlined"
           style={[styles.input, styles.half]}
-          placeholder="19:30"
+          placeholder="HH.MM"
           keyboardType="numeric"
         />
       </View>

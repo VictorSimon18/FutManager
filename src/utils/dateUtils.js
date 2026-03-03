@@ -24,3 +24,25 @@ export function formatTime(timeString) {
   if (!timeString) return '';
   return timeString.replace(':', '.');
 }
+
+/**
+ * Convierte una fecha de formato DD-MM-YYYY a YYYY-MM-DD para guardar en SQLite.
+ * @param {string} displayDate Fecha en formato DD-MM-YYYY
+ * @returns {string} Fecha en formato YYYY-MM-DD, o '' si es nula o inválida
+ */
+export function parseDate(displayDate) {
+  if (!displayDate) return '';
+  const parts = displayDate.split('-');
+  if (parts.length !== 3) return displayDate;
+  return `${parts[2]}-${parts[1]}-${parts[0]}`;
+}
+
+/**
+ * Convierte una hora de formato HH.MM a HH:MM para guardar en SQLite.
+ * @param {string} displayTime Hora en formato HH.MM
+ * @returns {string} Hora en formato HH:MM, o '' si es nula
+ */
+export function parseTime(displayTime) {
+  if (!displayTime) return '';
+  return displayTime.replace('.', ':');
+}

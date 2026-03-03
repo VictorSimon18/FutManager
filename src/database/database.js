@@ -171,5 +171,28 @@ export async function initDatabase() {
     // La columna ya existe — ignorar el error
   }
 
+  // Nuevos campos de estadísticas individuales por partido (migración segura)
+  const nuevasCols = [
+    'paradas INTEGER DEFAULT 0',
+    'despejes INTEGER DEFAULT 0',
+    'entradas INTEGER DEFAULT 0',
+    'pases_clave INTEGER DEFAULT 0',
+    'tiros_puerta INTEGER DEFAULT 0',
+    'tiros_fuera INTEGER DEFAULT 0',
+    'faltas_cometidas INTEGER DEFAULT 0',
+    'faltas_recibidas INTEGER DEFAULT 0',
+    'fueras_juego INTEGER DEFAULT 0',
+  ];
+  for (const colDef of nuevasCols) {
+    try {
+      await database.execAsync(
+        `ALTER TABLE estadisticas_jugador ADD COLUMN ${colDef};`
+      );
+      console.log(`[DB] Columna añadida a estadisticas_jugador: ${colDef.split(' ')[0]}`);
+    } catch {
+      // La columna ya existe — ignorar el error
+    }
+  }
+
   console.log('[DB] Base de datos inicializada correctamente.');
 }

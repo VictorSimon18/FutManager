@@ -1,10 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Text, Card, Avatar, Button, Divider, ActivityIndicator } from 'react-native-paper';
+import { Text, Card, Avatar, Button, Divider, ActivityIndicator, ProgressBar } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import { AuthContext } from '../../context/AuthContext';
 import { getPlayerById, deletePlayer } from '../../database/services/playerService';
 import { getSeasonStats, getStatsByPlayer } from '../../database/services/statsService';
 import { formatDate } from '../../utils/dateUtils';
+import { getPositionColor } from '../../utils/positionUtils';
+import { usePlayerAttendance } from '../../hooks/usePlayerAttendance';
 import StatBadge from '../../components/StatBadge';
 import ConfirmDialog from '../../components/ConfirmDialog';
 
@@ -16,11 +19,15 @@ function matchResult(gF, gC) {
 
 export default function PlayerDetailScreen({ route, navigation }) {
   const { playerId } = route.params;
+  const { equipoId } = useContext(AuthContext);
+
   const [player, setPlayer] = useState(null);
   const [seasonStats, setSeasonStats] = useState(null);
   const [matchStats, setMatchStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const { attendance } = usePlayerAttendance(playerId, equipoId);
 
   const load = useCallback(async () => {
     try {
@@ -65,6 +72,8 @@ export default function PlayerDetailScreen({ route, navigation }) {
     );
   }
 
+  const posColor = getPositionColor(player.posicion);
+
   const initials = player.nombre
     ? player.nombre.trim().split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase()
     : '?';
@@ -72,30 +81,37 @@ export default function PlayerDetailScreen({ route, navigation }) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Cabecera jugador */}
-      <Card style={styles.headerCard}>
+      <Card style={[styles.headerCard, { borderTopColor: posColor }]}>
         <Card.Content style={styles.headerContent}>
-          <Avatar.Text size={72} label={initials} style={styles.avatar} labelStyle={styles.avatarLabel} />
+          <Avatar.Text
+            size={72}
+            label={initials}
+            style={[styles.avatar, { backgroundColor: posColor }]}
+            labelStyle={styles.avatarLabel}
+          />
           <View style={styles.headerInfo}>
             <Text variant="headlineSmall" style={styles.nombre}>{player.nombre}</Text>
             {player.posicion ? (
-              <Text variant="bodyMedium" style={styles.posicion}>{player.posicion}</Text>
+              <Text variant="bodyMedium" style={[styles.posicion, { color: posColor }]}>
+                {player.posicion}
+              </Text>
             ) : null}
             <View style={styles.chips}>
               {player.dorsal != null && (
                 <View style={styles.chip}>
-                  <Icon name="tshirt-crew" size={14} color="#FF6F00" />
+                  <Icon name="tshirt-crew" size={14} color={posColor} />
                   <Text variant="bodySmall" style={styles.chipText}>#{player.dorsal}</Text>
                 </View>
               )}
               {player.pie_dominante && (
                 <View style={styles.chip}>
-                  <Icon name="shoe-sneaker" size={14} color="#FF6F00" />
+                  <Icon name="shoe-sneaker" size={14} color={posColor} />
                   <Text variant="bodySmall" style={styles.chipText}>{player.pie_dominante}</Text>
                 </View>
               )}
               {player.sexo && (
                 <View style={styles.chip}>
-                  <Icon name="account" size={14} color="#FF6F00" />
+                  <Icon name="account" size={14} color={posColor} />
                   <Text variant="bodySmall" style={styles.chipText}>{player.sexo}</Text>
                 </View>
               )}
@@ -132,19 +148,51 @@ export default function PlayerDetailScreen({ route, navigation }) {
           <View style={styles.statsRow}>
             <StatBadge icon="soccer-field" value={seasonStats?.partidos_jugados ?? 0} label="Partidos" color="#1E88E5" />
             <StatBadge icon="soccer" value={seasonStats?.total_goles ?? 0} label="Goles" color="#43A047" />
-            <StatBadge icon="hand-okay" value={seasonStats?.total_asistencias ?? 0} label="Asistencias" color="#FF6F00" />
+            <StatBadge icon="hand-okay" value={seasonStats?.total_asistencias ?? 0} label="Asist." color="#FF6F00" />
             <StatBadge icon="timer" value={seasonStats?.total_minutos ?? 0} label="Minutos" color="#757575" />
           </View>
           <Divider style={styles.divider} />
           <View style={styles.statsRow}>
             <StatBadge icon="card-text" value={seasonStats?.total_amarillas ?? 0} label="Amarillas" color="#FDD835" />
             <StatBadge icon="card-text" value={seasonStats?.total_rojas ?? 0} label="Rojas" color="#E53935" />
+            <StatBadge icon="shield-account" value={seasonStats?.total_entradas ?? 0} label="Entradas" color="#1E88E5" />
             <StatBadge icon="star-circle" value={
               seasonStats?.valoracion_media != null
                 ? Number(seasonStats.valoracion_media).toFixed(1)
                 : '—'
             } label="Valoración" color="#FF6F00" />
           </View>
+        </Card.Content>
+      </Card>
+
+      {/* Asistencia a entrenamientos */}
+      <Card style={styles.card}>
+        <Card.Content>
+          <Text variant="titleSmall" style={styles.sectionTitle}>Asistencia a entrenamientos</Text>
+          {attendance ? (
+            <>
+              <View style={styles.attendanceRow}>
+                <Icon name="calendar-check" size={18} color="#00AA13" />
+                <Text variant="bodyMedium" style={styles.attendanceText}>
+                  {attendance.asistidos} / {attendance.total} entrenamientos — {attendance.porcentaje}%
+                </Text>
+              </View>
+              <ProgressBar
+                progress={attendance.total > 0 ? attendance.asistidos / attendance.total : 0}
+                color="#00AA13"
+                style={styles.progressBar}
+              />
+              <Text variant="bodySmall" style={styles.attendanceHint}>
+                {attendance.porcentaje >= 80
+                  ? 'Buena asistencia'
+                  : attendance.porcentaje >= 50
+                  ? 'Asistencia regular'
+                  : 'Asistencia baja'}
+              </Text>
+            </>
+          ) : (
+            <Text variant="bodySmall" style={styles.emptyText}>Sin datos de asistencia.</Text>
+          )}
         </Card.Content>
       </Card>
 
@@ -155,6 +203,8 @@ export default function PlayerDetailScreen({ route, navigation }) {
             <Text variant="titleSmall" style={styles.sectionTitle}>Últimos partidos</Text>
             {matchStats.slice(0, 5).map(stat => {
               const res = matchResult(stat.goles_favor, stat.goles_contra);
+              // Mostrar tarjeta roja si tiene 2+ amarillas o roja directa
+              const mostrarRoja = stat.tarjetas_rojas > 0 || stat.tarjetas_amarillas >= 2;
               return (
                 <View key={stat.id} style={styles.matchRow}>
                   <View style={[styles.resultBadge, { backgroundColor: res.color }]}>
@@ -168,6 +218,12 @@ export default function PlayerDetailScreen({ route, navigation }) {
                     <Text variant="bodySmall" style={styles.matchStatText}>
                       ⚽ {stat.goles}  🅰️ {stat.asistencias}  ⏱ {stat.minutos_jugados}'
                     </Text>
+                    {(stat.tarjetas_amarillas > 0 || mostrarRoja) && (
+                      <Text variant="bodySmall" style={styles.matchStatText}>
+                        {stat.tarjetas_amarillas > 0 ? `🟨 ${stat.tarjetas_amarillas}` : ''}
+                        {mostrarRoja ? '  🟥 1' : ''}
+                      </Text>
+                    )}
                   </View>
                 </View>
               );
@@ -215,13 +271,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F5F5' },
   content: { padding: 16, gap: 12, paddingBottom: 40 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  headerCard: { backgroundColor: '#fff', borderRadius: 12, borderTopWidth: 3, borderTopColor: '#FF6F00' },
+  headerCard: { backgroundColor: '#fff', borderRadius: 12, borderTopWidth: 3 },
   headerContent: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  avatar: { backgroundColor: '#FF6F00' },
+  avatar: {},
   avatarLabel: { color: '#fff', fontWeight: 'bold', fontSize: 24 },
   headerInfo: { flex: 1 },
   nombre: { fontWeight: 'bold', color: '#1A1A1A' },
-  posicion: { color: '#FF6F00', fontWeight: '600', marginTop: 2 },
+  posicion: { fontWeight: '600', marginTop: 2 },
   chips: { flexDirection: 'row', gap: 12, marginTop: 8, flexWrap: 'wrap' },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   chipText: { color: '#666' },
@@ -231,6 +287,13 @@ const styles = StyleSheet.create({
   dataText: { color: '#444' },
   statsRow: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 8 },
   divider: { marginVertical: 8 },
+  // Asistencia
+  attendanceRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  attendanceText: { color: '#1A1A1A', fontWeight: '600' },
+  progressBar: { height: 8, borderRadius: 4, marginBottom: 6 },
+  attendanceHint: { color: '#888', fontStyle: 'italic' },
+  emptyText: { color: '#999', fontStyle: 'italic' },
+  // Historial partidos
   matchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
   resultBadge: { width: 28, height: 28, borderRadius: 6, justifyContent: 'center', alignItems: 'center' },
   resultLabel: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
