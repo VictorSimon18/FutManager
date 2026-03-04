@@ -1,8 +1,7 @@
 # COSAS QUE AÑADIR A EL TFG.
 
 ---
-
-- [ ] ¿Mapa con ruta a los campos?
+## ENTRENADORES
 
 - [ ] Pizarra interactiva para jugadas
 
@@ -45,3 +44,8 @@
 - [  ] En los campos rellenables, al seleccionarlos, que no se vea en el verde que se ve ahora si no en un todo mas acorde al azul que hay (4287B3)
 
 - [  ] Que al poner un estadio se pueda poner en un mapa con la librereia "LeafLet" (Prompt ya generado en claude)
+
+
+## JUGADORES
+
+- [ ] Mapa con ruta a los campos
