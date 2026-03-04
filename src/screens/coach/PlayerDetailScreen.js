@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Text, Card, Avatar, Button, Divider, ActivityIndicator, ProgressBar } from 'react-native-paper';
+import { Text, Avatar, Button, Divider, ActivityIndicator, ProgressBar } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from '../../context/AuthContext';
 import { getPlayerById, deletePlayer } from '../../database/services/playerService';
 import { getSeasonStats, getStatsByPlayer } from '../../database/services/statsService';
@@ -11,10 +12,13 @@ import { usePlayerAttendance } from '../../hooks/usePlayerAttendance';
 import StatBadge from '../../components/StatBadge';
 import ConfirmDialog from '../../components/ConfirmDialog';
 
+const GLASS_BG = 'rgba(255,255,255,0.08)';
+const GLASS_BORDER = 'rgba(255,255,255,0.13)';
+
 function matchResult(gF, gC) {
   if (gF > gC) return { label: 'V', color: '#43A047' };
   if (gF < gC) return { label: 'D', color: '#E53935' };
-  return { label: 'E', color: '#FF6F00' };
+  return { label: 'E', color: '#105E7A' };
 }
 
 export default function PlayerDetailScreen({ route, navigation }) {
@@ -67,7 +71,13 @@ export default function PlayerDetailScreen({ route, navigation }) {
   if (loading || !player) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#FF6F00" />
+        <LinearGradient
+          colors={['#0f2027', '#203a43', '#2c5364']}
+          style={StyleSheet.absoluteFill}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.4, y: 1 }}
+        />
+        <ActivityIndicator size="large" color="#105E7A" />
       </View>
     );
   }
@@ -79,76 +89,80 @@ export default function PlayerDetailScreen({ route, navigation }) {
     : '?';
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Cabecera jugador */}
-      <Card style={[styles.headerCard, { borderTopColor: posColor }]}>
-        <Card.Content style={styles.headerContent}>
-          <Avatar.Text
-            size={72}
-            label={initials}
-            style={[styles.avatar, { backgroundColor: posColor }]}
-            labelStyle={styles.avatarLabel}
-          />
-          <View style={styles.headerInfo}>
-            <Text variant="headlineSmall" style={styles.nombre}>{player.nombre}</Text>
-            {player.posicion ? (
-              <Text variant="bodyMedium" style={[styles.posicion, { color: posColor }]}>
-                {player.posicion}
-              </Text>
-            ) : null}
-            <View style={styles.chips}>
-              {player.dorsal != null && (
-                <View style={styles.chip}>
-                  <Icon name="tshirt-crew" size={14} color={posColor} />
-                  <Text variant="bodySmall" style={styles.chipText}>#{player.dorsal}</Text>
-                </View>
-              )}
-              {player.pie_dominante && (
-                <View style={styles.chip}>
-                  <Icon name="shoe-sneaker" size={14} color={posColor} />
-                  <Text variant="bodySmall" style={styles.chipText}>{player.pie_dominante}</Text>
-                </View>
-              )}
-              {player.sexo && (
-                <View style={styles.chip}>
-                  <Icon name="account" size={14} color={posColor} />
-                  <Text variant="bodySmall" style={styles.chipText}>{player.sexo}</Text>
-                </View>
-              )}
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['#0f2027', '#203a43', '#2c5364']}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.4, y: 1 }}
+      />
+      <ScrollView contentContainerStyle={styles.content}>
+        {/* Cabecera jugador */}
+        <View style={[styles.headerCard, { borderTopColor: posColor }]}>
+          <View style={styles.headerContent}>
+            <Avatar.Text
+              size={72}
+              label={initials}
+              style={[styles.avatar, { backgroundColor: posColor }]}
+              labelStyle={styles.avatarLabel}
+            />
+            <View style={styles.headerInfo}>
+              <Text variant="headlineSmall" style={styles.nombre}>{player.nombre}</Text>
+              {player.posicion ? (
+                <Text variant="bodyMedium" style={[styles.posicion, { color: posColor }]}>
+                  {player.posicion}
+                </Text>
+              ) : null}
+              <View style={styles.chips}>
+                {player.dorsal != null && (
+                  <View style={styles.chip}>
+                    <Icon name="tshirt-crew" size={14} color={posColor} />
+                    <Text variant="bodySmall" style={styles.chipText}>#{player.dorsal}</Text>
+                  </View>
+                )}
+                {player.pie_dominante && (
+                  <View style={styles.chip}>
+                    <Icon name="shoe-sneaker" size={14} color={posColor} />
+                    <Text variant="bodySmall" style={styles.chipText}>{player.pie_dominante}</Text>
+                  </View>
+                )}
+                {player.sexo && (
+                  <View style={styles.chip}>
+                    <Icon name="account" size={14} color={posColor} />
+                    <Text variant="bodySmall" style={styles.chipText}>{player.sexo}</Text>
+                  </View>
+                )}
+              </View>
             </View>
           </View>
-        </Card.Content>
-      </Card>
+        </View>
 
-      {/* Datos personales */}
-      <Card style={styles.card}>
-        <Card.Content>
+        {/* Datos personales */}
+        <View style={styles.card}>
           <Text variant="titleSmall" style={styles.sectionTitle}>Datos personales</Text>
           <View style={styles.dataRow}>
-            <Icon name="cake" size={18} color="#9E9E9E" />
+            <Icon name="cake" size={18} color="rgba(255,255,255,0.35)" />
             <Text variant="bodyMedium" style={styles.dataText}>
               {formatDate(player.fecha_nacimiento)}
             </Text>
           </View>
           <View style={styles.dataRow}>
-            <Icon name="human-male-height" size={18} color="#9E9E9E" />
+            <Icon name="human-male-height" size={18} color="rgba(255,255,255,0.35)" />
             <Text variant="bodyMedium" style={styles.dataText}>
               {player.altura ? `${player.altura} m` : '—'}
               {'  '}·{'  '}
               {player.peso ? `${player.peso} kg` : '—'}
             </Text>
           </View>
-        </Card.Content>
-      </Card>
+        </View>
 
-      {/* Estadísticas de temporada */}
-      <Card style={styles.card}>
-        <Card.Content>
+        {/* Estadísticas de temporada */}
+        <View style={styles.card}>
           <Text variant="titleSmall" style={styles.sectionTitle}>Estadísticas de temporada</Text>
           <View style={styles.statsRow}>
             <StatBadge icon="soccer-field" value={seasonStats?.partidos_jugados ?? 0} label="Partidos" color="#1E88E5" />
             <StatBadge icon="soccer" value={seasonStats?.total_goles ?? 0} label="Goles" color="#43A047" />
-            <StatBadge icon="hand-okay" value={seasonStats?.total_asistencias ?? 0} label="Asist." color="#FF6F00" />
+            <StatBadge icon="hand-okay" value={seasonStats?.total_asistencias ?? 0} label="Asist." color="#105E7A" />
             <StatBadge icon="timer" value={seasonStats?.total_minutos ?? 0} label="Minutos" color="#757575" />
           </View>
           <Divider style={styles.divider} />
@@ -160,14 +174,12 @@ export default function PlayerDetailScreen({ route, navigation }) {
               seasonStats?.valoracion_media != null
                 ? Number(seasonStats.valoracion_media).toFixed(1)
                 : '—'
-            } label="Valoración" color="#FF6F00" />
+            } label="Valoración" color="#105E7A" />
           </View>
-        </Card.Content>
-      </Card>
+        </View>
 
-      {/* Asistencia a entrenamientos */}
-      <Card style={styles.card}>
-        <Card.Content>
+        {/* Asistencia a entrenamientos */}
+        <View style={styles.card}>
           <Text variant="titleSmall" style={styles.sectionTitle}>Asistencia a entrenamientos</Text>
           {attendance ? (
             <>
@@ -193,17 +205,14 @@ export default function PlayerDetailScreen({ route, navigation }) {
           ) : (
             <Text variant="bodySmall" style={styles.emptyText}>Sin datos de asistencia.</Text>
           )}
-        </Card.Content>
-      </Card>
+        </View>
 
-      {/* Historial de partidos */}
-      {matchStats.length > 0 && (
-        <Card style={styles.card}>
-          <Card.Content>
+        {/* Historial de partidos */}
+        {matchStats.length > 0 && (
+          <View style={styles.card}>
             <Text variant="titleSmall" style={styles.sectionTitle}>Últimos partidos</Text>
             {matchStats.slice(0, 5).map(stat => {
               const res = matchResult(stat.goles_favor, stat.goles_contra);
-              // Mostrar tarjeta roja si tiene 2+ amarillas o roja directa
               const mostrarRoja = stat.tarjetas_rojas > 0 || stat.tarjetas_amarillas >= 2;
               return (
                 <View key={stat.id} style={styles.matchRow}>
@@ -228,80 +237,94 @@ export default function PlayerDetailScreen({ route, navigation }) {
                 </View>
               );
             })}
-          </Card.Content>
-        </Card>
-      )}
+          </View>
+        )}
 
-      {/* Acciones */}
-      <View style={styles.actions}>
-        <Button
-          mode="contained"
-          icon="pencil"
-          onPress={() => navigation.navigate('PlayerForm', { playerId })}
-          buttonColor="#FF6F00"
-          style={styles.actionBtn}
-        >
-          Editar
-        </Button>
-        <Button
-          mode="outlined"
-          icon="account-remove"
-          onPress={() => setConfirmDelete(true)}
-          textColor="#D32F2F"
-          style={[styles.actionBtn, styles.deleteBtn]}
-        >
-          Dar de baja
-        </Button>
-      </View>
+        {/* Acciones */}
+        <View style={styles.actions}>
+          <Button
+            mode="contained"
+            icon="pencil"
+            onPress={() => navigation.navigate('PlayerForm', { playerId })}
+            buttonColor="#105E7A"
+            style={styles.actionBtn}
+          >
+            Editar
+          </Button>
+          <Button
+            mode="outlined"
+            icon="account-remove"
+            onPress={() => setConfirmDelete(true)}
+            textColor="#D32F2F"
+            style={[styles.actionBtn, styles.deleteBtn]}
+          >
+            Dar de baja
+          </Button>
+        </View>
 
-      <ConfirmDialog
-        visible={confirmDelete}
-        title="Dar de baja"
-        message={`¿Dar de baja a ${player.nombre}? Dejará de aparecer en la plantilla.`}
-        confirmLabel="Dar de baja"
-        destructive
-        onConfirm={handleDelete}
-        onDismiss={() => setConfirmDelete(false)}
-      />
-    </ScrollView>
+        <ConfirmDialog
+          visible={confirmDelete}
+          title="Dar de baja"
+          message={`¿Dar de baja a ${player.nombre}? Dejará de aparecer en la plantilla.`}
+          confirmLabel="Dar de baja"
+          destructive
+          onConfirm={handleDelete}
+          onDismiss={() => setConfirmDelete(false)}
+        />
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+  container: { flex: 1, backgroundColor: '#0f2027' },
   content: { padding: 16, gap: 12, paddingBottom: 40 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  headerCard: { backgroundColor: '#fff', borderRadius: 12, borderTopWidth: 3 },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0f2027' },
+  headerCard: {
+    backgroundColor: GLASS_BG,
+    borderRadius: 12,
+    borderTopWidth: 3,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+    padding: 16,
+  },
   headerContent: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   avatar: {},
   avatarLabel: { color: '#fff', fontWeight: 'bold', fontSize: 24 },
   headerInfo: { flex: 1 },
-  nombre: { fontWeight: 'bold', color: '#1A1A1A' },
+  nombre: { fontWeight: 'bold', color: '#FFFFFF' },
   posicion: { fontWeight: '600', marginTop: 2 },
   chips: { flexDirection: 'row', gap: 12, marginTop: 8, flexWrap: 'wrap' },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  chipText: { color: '#666' },
-  card: { backgroundColor: '#fff', borderRadius: 12 },
-  sectionTitle: { fontWeight: 'bold', color: '#FF6F00', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
+  chipText: { color: 'rgba(255,255,255,0.6)' },
+  card: {
+    backgroundColor: GLASS_BG,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+    padding: 16,
+  },
+  sectionTitle: { fontWeight: 'bold', color: '#105E7A', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
   dataRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  dataText: { color: '#444' },
+  dataText: { color: 'rgba(255,255,255,0.65)' },
   statsRow: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 8 },
-  divider: { marginVertical: 8 },
-  // Asistencia
+  divider: { marginVertical: 8, backgroundColor: 'rgba(255,255,255,0.08)' },
   attendanceRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
-  attendanceText: { color: '#1A1A1A', fontWeight: '600' },
+  attendanceText: { color: '#FFFFFF', fontWeight: '600' },
   progressBar: { height: 8, borderRadius: 4, marginBottom: 6 },
-  attendanceHint: { color: '#888', fontStyle: 'italic' },
-  emptyText: { color: '#999', fontStyle: 'italic' },
-  // Historial partidos
-  matchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
+  attendanceHint: { color: 'rgba(255,255,255,0.45)', fontStyle: 'italic' },
+  emptyText: { color: 'rgba(255,255,255,0.35)', fontStyle: 'italic' },
+  matchRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)',
+  },
   resultBadge: { width: 28, height: 28, borderRadius: 6, justifyContent: 'center', alignItems: 'center' },
   resultLabel: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
   matchInfo: { flex: 1 },
-  matchRival: { fontWeight: '600', color: '#1A1A1A' },
-  matchDate: { color: '#999' },
+  matchRival: { fontWeight: '600', color: '#FFFFFF' },
+  matchDate: { color: 'rgba(255,255,255,0.45)' },
   matchStats: {},
-  matchStatText: { color: '#555' },
+  matchStatText: { color: 'rgba(255,255,255,0.55)' },
   actions: { flexDirection: 'row', gap: 12, marginTop: 4 },
   actionBtn: { flex: 1, borderRadius: 8 },
   deleteBtn: { borderColor: '#D32F2F' },

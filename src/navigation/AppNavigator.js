@@ -24,7 +24,7 @@ import TrainingDetailScreen from '../screens/coach/TrainingDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
-const COACH_COLOR = '#FF6F00';
+const COACH_COLOR = '#105E7A';
 
 /**
  * Botón de cierre de sesión para el header de las pantallas Home.

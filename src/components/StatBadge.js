@@ -7,7 +7,7 @@ import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
  * Badge pequeño que muestra un icono + valor numérico.
  * @param {{ icon: string, value: number|string, color?: string, label?: string }} props
  */
-export default function StatBadge({ icon, value, color = '#FF6F00', label }) {
+export default function StatBadge({ icon, value, color = '#105E7A', label }) {
   return (
     <View style={styles.container}>
       <Icon name={icon} size={18} color={color} />

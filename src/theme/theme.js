@@ -6,7 +6,7 @@ export const theme = {
     ...DefaultTheme.colors,
     primary: '#00AA13', // Verde campo de fútbol
     secondary: '#1E88E5', // Azul deportivo
-    tertiary: '#FF6F00', // Naranja energético
+    tertiary: '#105E7A', // Naranja energético
     background: '#F5F5F5',
     surface: '#FFFFFF',
     surfaceVariant: '#E8F5E9',
@@ -17,7 +17,7 @@ export const theme = {
     onSurface: '#1A1A1A',
     outline: '#C8C8C8',
     // Colores personalizados para roles
-    coach: '#FF6F00', // Naranja para entrenador
+    coach: '#105E7A', // Naranja para entrenador
     player: '#00AA13', // Verde para jugador
     fan: '#1E88E5', // Azul para aficionado
   },

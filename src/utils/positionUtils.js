@@ -21,7 +21,7 @@ const POSITION_ORDER = {
 
 // Color por posición
 const POSITION_COLOR = {
-  'Portero':               '#FF6F00',
+  'Portero':               '#105E7A',
   'Defensa Central':       '#D32F2F',
   'Lateral Derecho':       '#D32F2F',
   'Lateral Izquierdo':     '#D32F2F',

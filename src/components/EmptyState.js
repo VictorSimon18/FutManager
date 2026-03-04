@@ -44,6 +44,6 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 8,
-    backgroundColor: '#FF6F00',
+    backgroundColor: '#105E7A',
   },
 });

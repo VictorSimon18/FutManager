@@ -1,9 +1,13 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Switch } from 'react-native';
 import { Text, TextInput, Button, SegmentedButtons, HelperText } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from '../../context/AuthContext';
 import { createMatch, getMatchById, updateMatch } from '../../database/services/matchService';
 import { formatDate, formatTime, parseDate, parseTime } from '../../utils/dateUtils';
+
+const GLASS_BG = 'rgba(255,255,255,0.08)';
+const GLASS_BORDER = 'rgba(255,255,255,0.13)';
 
 const TIPOS = [
   { value: 'liga', label: 'Liga' },
@@ -48,7 +52,6 @@ export default function MatchFormScreen({ route, navigation }) {
       const m = await getMatchById(matchId);
       if (!m) return;
       setRival(m.rival ?? '');
-      // Convertir formatos de almacenamiento a formatos de visualización
       setFecha(m.fecha ? formatDate(m.fecha) : '');
       setHora(m.hora ? formatTime(m.hora) : '');
       setUbicacion(m.ubicacion ?? '');
@@ -80,7 +83,6 @@ export default function MatchFormScreen({ route, navigation }) {
       const data = {
         equipo_id: equipoId,
         rival: rival.trim(),
-        // Convertir DD-MM-YYYY → YYYY-MM-DD y HH.MM → HH:MM para SQLite
         fecha: parseDate(fecha.trim()),
         hora: hora ? parseTime(hora) : null,
         ubicacion: ubicacion || null,
@@ -103,117 +105,128 @@ export default function MatchFormScreen({ route, navigation }) {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-
-      <SectionTitle text="Datos del partido" />
-      <TextInput
-        label="Rival *"
-        value={rival}
-        onChangeText={setRival}
-        mode="outlined"
-        style={styles.input}
-        error={!!errors.rival}
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['#0f2027', '#203a43', '#2c5364']}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.4, y: 1 }}
       />
-      <HelperText type="error" visible={!!errors.rival}>{errors.rival}</HelperText>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
 
-      <View style={styles.row}>
+        <SectionTitle text="Datos del partido" />
         <TextInput
-          label="Fecha *"
-          value={fecha}
-          onChangeText={setFecha}
+          label="Rival *"
+          value={rival}
+          onChangeText={setRival}
           mode="outlined"
-          style={[styles.input, styles.flex2]}
-          placeholder="DD-MM-YYYY"
-          keyboardType="numeric"
-          error={!!errors.fecha}
+          style={styles.input}
+          error={!!errors.rival}
         />
+        <HelperText type="error" visible={!!errors.rival}>{errors.rival}</HelperText>
+
+        <View style={styles.row}>
+          <TextInput
+            label="Fecha *"
+            value={fecha}
+            onChangeText={setFecha}
+            mode="outlined"
+            style={[styles.input, styles.flex2]}
+            placeholder="DD-MM-YYYY"
+            placeholderTextColor="#fff"
+            keyboardType="numeric"
+            error={!!errors.fecha}
+          />
+          <TextInput
+            label="Hora"
+            value={hora}
+            onChangeText={setHora}
+            mode="outlined"
+            style={[styles.input, styles.flex1]}
+            placeholder="HH.MM"
+            placeholderTextColor="#fff"
+            keyboardType="numeric"
+          />
+        </View>
+        <HelperText type="error" visible={!!errors.fecha}>{errors.fecha}</HelperText>
+
         <TextInput
-          label="Hora"
-          value={hora}
-          onChangeText={setHora}
+          label="Ubicación"
+          value={ubicacion}
+          onChangeText={setUbicacion}
           mode="outlined"
-          style={[styles.input, styles.flex1]}
-          placeholder="HH.MM"
-          keyboardType="numeric"
+          style={styles.input}
+          placeholder="Campo Municipal de Vallecas"
+          placeholderTextColor="#fff"
         />
-      </View>
-      <HelperText type="error" visible={!!errors.fecha}>{errors.fecha}</HelperText>
 
-      <TextInput
-        label="Ubicación"
-        value={ubicacion}
-        onChangeText={setUbicacion}
-        mode="outlined"
-        style={styles.input}
-        placeholder="Campo Municipal de Vallecas"
-      />
-
-      <SectionTitle text="Tipo de partido" />
-      <SegmentedButtons
-        value={tipo}
-        onValueChange={setTipo}
-        buttons={TIPOS}
-        style={styles.segmented}
-      />
-
-      <SectionTitle text="Modalidad" />
-      <SegmentedButtons
-        value={modalidad}
-        onValueChange={setModalidad}
-        buttons={MODALIDADES}
-        style={styles.segmented}
-      />
-
-      <SectionTitle text="Condición" />
-      <View style={styles.switchRow}>
-        <Text variant="bodyMedium" style={styles.switchLabel}>
-          {esLocal ? '🏠 Local' : '✈️ Visitante'}
-        </Text>
-        <Switch
-          value={esLocal}
-          onValueChange={setEsLocal}
-          trackColor={{ true: '#FF6F00', false: '#BDBDBD' }}
-          thumbColor="#fff"
+        <SectionTitle text="Tipo de partido" />
+        <SegmentedButtons
+          value={tipo}
+          onValueChange={setTipo}
+          buttons={TIPOS}
+          style={styles.segmented}
         />
-      </View>
 
-      <SectionTitle text="Notas" />
-      <TextInput
-        label="Notas adicionales"
-        value={notas}
-        onChangeText={setNotas}
-        mode="outlined"
-        style={styles.input}
-        multiline
-        numberOfLines={3}
-      />
+        <SectionTitle text="Modalidad" />
+        <SegmentedButtons
+          value={modalidad}
+          onValueChange={setModalidad}
+          buttons={MODALIDADES}
+          style={styles.segmented}
+        />
 
-      <Button
-        mode="contained"
-        onPress={handleSave}
-        loading={saving}
-        disabled={saving}
-        style={styles.saveBtn}
-        buttonColor="#FF6F00"
-      >
-        {isEditing ? 'Guardar cambios' : 'Crear partido'}
-      </Button>
-    </ScrollView>
+        <SectionTitle text="Condición" />
+        <View style={styles.switchRow}>
+          <Text variant="bodyMedium" style={styles.switchLabel}>
+            {esLocal ? '🏠 Local' : '✈️ Visitante'}
+          </Text>
+          <Switch
+            value={esLocal}
+            onValueChange={setEsLocal}
+            trackColor={{ true: '#105E7A', false: '#BDBDBD' }}
+            thumbColor="#fff"
+          />
+        </View>
+
+        <SectionTitle text="Notas" />
+        <TextInput
+          label="Notas adicionales"
+          value={notas}
+          onChangeText={setNotas}
+          mode="outlined"
+          style={styles.input}
+          multiline
+          numberOfLines={3}
+        />
+
+        <Button
+          mode="contained"
+          onPress={handleSave}
+          loading={saving}
+          disabled={saving}
+          style={styles.saveBtn}
+          buttonColor="#105E7A"
+        >
+          {isEditing ? 'Guardar cambios' : 'Crear partido'}
+        </Button>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+  container: { flex: 1, backgroundColor: '#0f2027' },
   content: { padding: 16, paddingBottom: 40 },
   sectionTitle: {
     fontWeight: 'bold',
-    color: '#FF6F00',
+    color: '#105E7A',
     marginTop: 16,
     marginBottom: 8,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  input: { backgroundColor: '#fff', marginBottom: 0 },
+  input: { backgroundColor: '#4287B3', marginBottom: 0 },
   row: { flexDirection: 'row', gap: 12 },
   flex1: { flex: 1 },
   flex2: { flex: 2 },
@@ -222,11 +235,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#fff',
+    backgroundColor: GLASS_BG,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
     padding: 16,
     borderRadius: 8,
     marginBottom: 4,
   },
-  switchLabel: { fontWeight: '600', color: '#1A1A1A' },
+  switchLabel: { fontWeight: '600', color: '#FFFFFF' },
   saveBtn: { marginTop: 24, borderRadius: 8 },
 });

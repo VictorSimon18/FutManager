@@ -1,11 +1,15 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { Text, Card, FAB, Chip, SegmentedButtons } from 'react-native-paper';
+import { Text, FAB, Chip, SegmentedButtons } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from '../../context/AuthContext';
 import { useMatches } from '../../hooks/useMatches';
 import { formatDate, formatTime } from '../../utils/dateUtils';
 import EmptyState from '../../components/EmptyState';
+
+const GLASS_BG = 'rgba(255,255,255,0.08)';
+const GLASS_BORDER = 'rgba(255,255,255,0.13)';
 
 function MatchCard({ match, onPress }) {
   const isFinished = match.estado === 'finalizado';
@@ -16,58 +20,56 @@ function MatchCard({ match, onPress }) {
   if (isFinished) {
     if (gF > gC) { resultColor = '#43A047'; resultLabel = 'Victoria'; }
     else if (gF < gC) { resultColor = '#E53935'; resultLabel = 'Derrota'; }
-    else { resultColor = '#FF6F00'; resultLabel = 'Empate'; }
+    else { resultColor = '#105E7A'; resultLabel = 'Empate'; }
   }
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
-      <Card style={[styles.card, { borderTopColor: resultColor }]}>
-        <Card.Content>
-          <View style={styles.cardTop}>
-            <View style={styles.cardLeft}>
-              <Text variant="titleMedium" style={styles.rival} numberOfLines={1}>
-                vs. {match.rival}
+      <View style={[styles.card, { borderTopColor: resultColor }]}>
+        <View style={styles.cardTop}>
+          <View style={styles.cardLeft}>
+            <Text variant="titleMedium" style={styles.rival} numberOfLines={1}>
+              vs. {match.rival}
+            </Text>
+            <View style={styles.metaRow}>
+              <Icon name="calendar" size={14} color="rgba(255,255,255,0.4)" />
+              <Text variant="bodySmall" style={styles.metaText}>
+                {formatDate(match.fecha)}
+                {match.hora ? `  ·  ${formatTime(match.hora)}` : ''}
               </Text>
+            </View>
+            {match.ubicacion ? (
               <View style={styles.metaRow}>
-                <Icon name="calendar" size={14} color="#999" />
-                <Text variant="bodySmall" style={styles.metaText}>
-                  {formatDate(match.fecha)}
-                  {match.hora ? `  ·  ${formatTime(match.hora)}` : ''}
+                <Icon name="map-marker" size={14} color="rgba(255,255,255,0.4)" />
+                <Text variant="bodySmall" style={styles.metaText} numberOfLines={1}>
+                  {match.ubicacion}
                 </Text>
               </View>
-              {match.ubicacion ? (
-                <View style={styles.metaRow}>
-                  <Icon name="map-marker" size={14} color="#999" />
-                  <Text variant="bodySmall" style={styles.metaText} numberOfLines={1}>
-                    {match.ubicacion}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-            <View style={styles.cardRight}>
-              {isFinished ? (
-                <>
-                  <Text variant="headlineMedium" style={[styles.score, { color: resultColor }]}>
-                    {gF} - {gC}
-                  </Text>
-                  <Text variant="bodySmall" style={{ color: resultColor, fontWeight: '600' }}>
-                    {resultLabel}
-                  </Text>
-                </>
-              ) : (
-                <Icon name="clock-outline" size={32} color="#BDBDBD" />
-              )}
-            </View>
+            ) : null}
           </View>
-          <View style={styles.chipsRow}>
-            <Chip compact icon={match.es_local ? 'home' : 'airplane'} style={styles.chip}>
-              {match.es_local ? 'Local' : 'Visitante'}
-            </Chip>
-            {match.tipo && <Chip compact style={styles.chip}>{match.tipo}</Chip>}
-            {match.modalidad && <Chip compact style={styles.chip}>{match.modalidad}</Chip>}
+          <View style={styles.cardRight}>
+            {isFinished ? (
+              <>
+                <Text variant="headlineMedium" style={[styles.score, { color: resultColor }]}>
+                  {gF} - {gC}
+                </Text>
+                <Text variant="bodySmall" style={{ color: resultColor, fontWeight: '600' }}>
+                  {resultLabel}
+                </Text>
+              </>
+            ) : (
+              <Icon name="clock-outline" size={32} color="rgba(255,255,255,0.3)" />
+            )}
           </View>
-        </Card.Content>
-      </Card>
+        </View>
+        <View style={styles.chipsRow}>
+          <Chip compact icon={match.es_local ? 'home' : 'airplane'} style={styles.chip} textStyle={styles.chipText}>
+            {match.es_local ? 'Local' : 'Visitante'}
+          </Chip>
+          {match.tipo && <Chip compact style={styles.chip} textStyle={styles.chipText}>{match.tipo}</Chip>}
+          {match.modalidad && <Chip compact style={styles.chip} textStyle={styles.chipText}>{match.modalidad}</Chip>}
+        </View>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -77,7 +79,6 @@ export default function MatchListScreen({ navigation }) {
   const { matches, loading, refresh } = useMatches(equipoId);
   const [tab, setTab] = useState('upcoming');
 
-  // Refrescar cada vez que la pantalla recibe el foco
   useEffect(() => {
     const unsub = navigation.addListener('focus', refresh);
     return unsub;
@@ -94,13 +95,19 @@ export default function MatchListScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <LinearGradient
+        colors={['#0f2027', '#203a43', '#2c5364']}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.4, y: 1 }}
+      />
       <View style={styles.tabBar}>
         <SegmentedButtons
           value={tab}
           onValueChange={setTab}
           buttons={[
-            { value: 'upcoming', label: `Próximos (${upcoming.length})` },
-            { value: 'finished', label: `Jugados (${finished.length})` },
+            { value: 'upcoming', label: `Próximos (${upcoming.length})`, labelStyle: { color: '#FFFFFF' } },
+            { value: 'finished', label: `Jugados (${finished.length})`, labelStyle: { color: '#FFFFFF' } },
           ]}
         />
       </View>
@@ -140,10 +147,22 @@ export default function MatchListScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
-  tabBar: { backgroundColor: '#fff', padding: 16, elevation: 2 },
+  container: { flex: 1, backgroundColor: '#0f2027' },
+  tabBar: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: GLASS_BORDER,
+  },
   list: { padding: 16, gap: 10, paddingBottom: 96 },
-  card: { backgroundColor: '#fff', borderRadius: 12, borderTopWidth: 3 },
+  card: {
+    backgroundColor: GLASS_BG,
+    borderRadius: 12,
+    borderTopWidth: 3,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+    padding: 14,
+  },
   cardTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -153,11 +172,12 @@ const styles = StyleSheet.create({
   },
   cardLeft: { flex: 1, minWidth: 0 },
   cardRight: { alignItems: 'center', minWidth: 72 },
-  rival: { fontWeight: 'bold', color: '#1A1A1A', marginBottom: 6 },
+  rival: { fontWeight: 'bold', color: '#FFFFFF', marginBottom: 6 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
-  metaText: { color: '#888', flexShrink: 1 },
+  metaText: { color: 'rgba(255,255,255,0.5)', flexShrink: 1 },
   score: { fontWeight: 'bold', lineHeight: 36 },
   chipsRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginTop: 4 },
-  chip: { backgroundColor: '#F5F5F5' },
-  fab: { position: 'absolute', right: 20, bottom: 20, backgroundColor: '#FF6F00' },
+  chip: { backgroundColor: 'rgba(255,255,255,0.1)' },
+  chipText: { color: 'rgba(255,255,255,0.8)', fontSize: 12 },
+  fab: { position: 'absolute', right: 20, bottom: 20, backgroundColor: '#105E7A' },
 });

@@ -100,7 +100,7 @@ export default function HomePlayerScreen() {
               </Surface>
 
               <Surface style={[styles.statBox, styles.orangeBox]} elevation={1}>
-                <Icon name="run-fast" size={28} color="#FF6F00" />
+                <Icon name="run-fast" size={28} color="#105E7A" />
                 <Text variant="headlineMedium" style={styles.statValue}>
                   {seasonStats?.partidos_jugados ?? 0}
                 </Text>
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   },
   orangeBox: {
     borderTopWidth: 3,
-    borderTopColor: '#FF6F00',
+    borderTopColor: '#105E7A',
   },
   purpleBox: {
     borderTopWidth: 3,

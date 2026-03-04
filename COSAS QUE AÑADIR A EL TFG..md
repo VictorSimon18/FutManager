@@ -29,3 +29,19 @@
 - [✅] Añadir mas estadísticas, tanto de jugadores como de equipo.
 
 - [✅] En las fichas de los jugadores se tiene que ver reflejado la asistencia a los entrenamientos.
+
+- [  ] En "Panel de entranador" --> "Proximo evento", Hacer que se actualice al instante al crear un evento.
+
+- [  ] Quitar de "Panel de entrenador" el bootn de "+ Nuevo partido".
+
+- [  ] Quitar la banda naranja de la pantalla de entrenador.
+
+- [  ] En "Programar partido" poder adjuntar una ruta al campo para que el jugador pueda ir facilmente.
+
+- [  ] Libreria para cambiar los emojis y que se vean mas "Cambia naturales"
+
+- [  ] Los textos de campos rellenables como "Fecha *" o "Hora de Inicio" que se vean en blanco.
+
+- [  ] En los campos rellenables, al seleccionarlos, que no se vea en el verde que se ve ahora si no en un todo mas acorde al azul que hay (4287B3)
+
+- [  ] Que al poner un estadio se pueda poner en un mapa con la librereia "LeafLet" (Prompt ya generado en claude)

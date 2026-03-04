@@ -2,24 +2,19 @@ import React, { useContext, useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { Text, TextInput, Button, SegmentedButtons, HelperText } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from '../../context/AuthContext';
 import { createPlayer, getPlayerById, updatePlayer } from '../../database/services/playerService';
 import { formatDate, parseDate } from '../../utils/dateUtils';
 
+const GLASS_BG = 'rgba(255,255,255,0.08)';
+const GLASS_BORDER = 'rgba(255,255,255,0.13)';
+
 const POSICIONES = [
-  'Portero',
-  'Defensa Central',
-  'Lateral Derecho',
-  'Lateral Izquierdo',
-  'Carrilero Derecho',
-  'Carrilero Izquierdo',
-  'Mediocentro Defensivo',
-  'Mediocentro',
-  'Mediapunta',
-  'Extremo Izquierdo',
-  'Extremo Derecho',
-  'Delantero',
-  'Líbero',
+  'Portero', 'Defensa Central', 'Lateral Derecho', 'Lateral Izquierdo',
+  'Carrilero Derecho', 'Carrilero Izquierdo', 'Mediocentro Defensivo',
+  'Mediocentro', 'Mediapunta', 'Extremo Izquierdo', 'Extremo Derecho',
+  'Delantero', 'Líbero',
 ];
 
 const SEXO_OPTIONS = [
@@ -77,9 +72,7 @@ export default function PlayerFormScreen({ route, navigation }) {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (isEditing) {
-      loadPlayer();
-    }
+    if (isEditing) loadPlayer();
   }, [playerId]);
 
   async function loadPlayer() {
@@ -90,7 +83,6 @@ export default function PlayerFormScreen({ route, navigation }) {
       setSexo(p.sexo ?? 'Hombre');
       setDorsal(p.dorsal != null ? String(p.dorsal) : '');
       setPosicion(p.posicion ?? '');
-      // Convertir fecha de almacenamiento YYYY-MM-DD a formato de visualización DD-MM-YYYY
       setFechaNacimiento(p.fecha_nacimiento ? formatDate(p.fecha_nacimiento) : '');
       setAltura(p.altura != null ? String(p.altura) : '');
       setPeso(p.peso != null ? String(p.peso) : '');
@@ -125,7 +117,6 @@ export default function PlayerFormScreen({ route, navigation }) {
         sexo: sexo || null,
         dorsal: dorsal ? parseInt(dorsal) : null,
         posicion: posicion || null,
-        // Convertir DD-MM-YYYY a YYYY-MM-DD para guardar en SQLite
         fecha_nacimiento: fechaNacimiento ? parseDate(fechaNacimiento) : null,
         altura: altura ? parseFloat(altura) : null,
         peso: peso ? parseFloat(peso) : null,
@@ -145,135 +136,142 @@ export default function PlayerFormScreen({ route, navigation }) {
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
-    >
-      <SectionTitle text="Datos personales" />
-
-      <TextInput
-        label="Nombre completo *"
-        value={nombre}
-        onChangeText={setNombre}
-        mode="outlined"
-        style={styles.input}
-        error={!!errors.nombre}
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['#0f2027', '#203a43', '#2c5364']}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.4, y: 1 }}
       />
-      <HelperText type="error" visible={!!errors.nombre}>{errors.nombre}</HelperText>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <SectionTitle text="Datos personales" />
 
-      <Text variant="bodySmall" style={styles.fieldLabel}>Sexo</Text>
-      <SegmentedButtons
-        value={sexo}
-        onValueChange={setSexo}
-        buttons={SEXO_OPTIONS}
-        style={styles.segmented}
-      />
-
-      <TextInput
-        label="Fecha de nacimiento"
-        value={fechaNacimiento}
-        onChangeText={setFechaNacimiento}
-        mode="outlined"
-        style={styles.input}
-        placeholder="DD-MM-YYYY"
-        keyboardType="numeric"
-        error={!!errors.fechaNacimiento}
-      />
-      <HelperText type="error" visible={!!errors.fechaNacimiento}>{errors.fechaNacimiento}</HelperText>
-
-      <SectionTitle text="Datos deportivos" />
-
-      <TextInput
-        label="Dorsal"
-        value={dorsal}
-        onChangeText={setDorsal}
-        mode="outlined"
-        style={styles.input}
-        keyboardType="numeric"
-        error={!!errors.dorsal}
-      />
-      <HelperText type="error" visible={!!errors.dorsal}>{errors.dorsal}</HelperText>
-
-      <Text variant="bodySmall" style={styles.fieldLabel}>Posición</Text>
-      <PosicionSelector selected={posicion} onSelect={setPosicion} />
-
-      <Text variant="bodySmall" style={styles.fieldLabel}>Pie dominante</Text>
-      <SegmentedButtons
-        value={pieDominante}
-        onValueChange={setPieDominante}
-        buttons={PIE_OPTIONS}
-        style={styles.segmented}
-      />
-
-      <SectionTitle text="Datos físicos" />
-      <View style={styles.row}>
         <TextInput
-          label="Altura (m)"
-          value={altura}
-          onChangeText={setAltura}
+          label="Nombre completo *"
+          value={nombre}
+          onChangeText={setNombre}
           mode="outlined"
-          style={[styles.input, styles.halfInput]}
-          keyboardType="decimal-pad"
-          placeholder="1.80"
-          error={!!errors.altura}
+          style={styles.input}
+          error={!!errors.nombre}
         />
+        <HelperText type="error" visible={!!errors.nombre}>{errors.nombre}</HelperText>
+
+        <Text variant="bodySmall" style={styles.fieldLabel}>Sexo</Text>
+        <SegmentedButtons
+          value={sexo}
+          onValueChange={setSexo}
+          buttons={SEXO_OPTIONS}
+          style={styles.segmented}
+        />
+
         <TextInput
-          label="Peso (kg)"
-          value={peso}
-          onChangeText={setPeso}
+          label="Fecha de nacimiento"
+          value={fechaNacimiento}
+          onChangeText={setFechaNacimiento}
           mode="outlined"
-          style={[styles.input, styles.halfInput]}
+          style={styles.input}
+          placeholder="DD-MM-YYYY"
+          placeholderTextColor="#fff"
           keyboardType="numeric"
-          placeholder="75"
-          error={!!errors.peso}
+          error={!!errors.fechaNacimiento}
         />
-      </View>
+        <HelperText type="error" visible={!!errors.fechaNacimiento}>{errors.fechaNacimiento}</HelperText>
 
-      <Button
-        mode="contained"
-        onPress={handleSave}
-        loading={saving}
-        disabled={saving}
-        style={styles.saveBtn}
-        buttonColor="#FF6F00"
-      >
-        {isEditing ? 'Guardar cambios' : 'Crear jugador'}
-      </Button>
-    </ScrollView>
+        <SectionTitle text="Datos deportivos" />
+
+        <TextInput
+          label="Dorsal"
+          value={dorsal}
+          onChangeText={setDorsal}
+          mode="outlined"
+          style={styles.input}
+          keyboardType="numeric"
+          error={!!errors.dorsal}
+        />
+        <HelperText type="error" visible={!!errors.dorsal}>{errors.dorsal}</HelperText>
+
+        <Text variant="bodySmall" style={styles.fieldLabel}>Posición</Text>
+        <PosicionSelector selected={posicion} onSelect={setPosicion} />
+
+        <Text variant="bodySmall" style={styles.fieldLabel}>Pie dominante</Text>
+        <SegmentedButtons
+          value={pieDominante}
+          onValueChange={setPieDominante}
+          buttons={PIE_OPTIONS}
+          style={styles.segmented}
+        />
+
+        <SectionTitle text="Datos físicos" />
+        <View style={styles.row}>
+          <TextInput
+            label="Altura (m)"
+            value={altura}
+            onChangeText={setAltura}
+            mode="outlined"
+            style={[styles.input, styles.halfInput]}
+            keyboardType="decimal-pad"
+            placeholder="1.80"
+            placeholderTextColor="#fff"
+            error={!!errors.altura}
+          />
+          <TextInput
+            label="Peso (kg)"
+            value={peso}
+            onChangeText={setPeso}
+            mode="outlined"
+            style={[styles.input, styles.halfInput]}
+            keyboardType="numeric"
+            placeholder="75"
+            placeholderTextColor="#fff"
+            error={!!errors.peso}
+          />
+        </View>
+
+        <Button
+          mode="contained"
+          onPress={handleSave}
+          loading={saving}
+          disabled={saving}
+          style={styles.saveBtn}
+          buttonColor="#105E7A"
+        >
+          {isEditing ? 'Guardar cambios' : 'Crear jugador'}
+        </Button>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+  container: { flex: 1, backgroundColor: '#0f2027' },
   content: { padding: 16, paddingBottom: 40 },
   sectionTitle: {
     fontWeight: 'bold',
-    color: '#FF6F00',
+    color: '#105E7A',
     marginTop: 16,
     marginBottom: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  fieldLabel: { color: '#555', marginBottom: 6, marginTop: 8 },
-  input: { backgroundColor: '#fff', marginBottom: 0 },
+  fieldLabel: { color: 'rgba(255,255,255,0.6)', marginBottom: 6, marginTop: 8 },
+  input: { backgroundColor: '#4287B3', marginBottom: 0 },
   row: { flexDirection: 'row', gap: 12 },
   halfInput: { flex: 1 },
   segmented: { marginBottom: 8 },
   posicionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   posicionBtn: {
     borderWidth: 1,
-    borderColor: '#BDBDBD',
+    borderColor: GLASS_BORDER,
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: '#fff',
+    backgroundColor: GLASS_BG,
   },
   posicionBtnActive: {
-    borderColor: '#FF6F00',
-    backgroundColor: '#FF6F00',
+    borderColor: '#105E7A',
+    backgroundColor: '#105E7A',
   },
-  posicionLabel: { fontSize: 13, color: '#555' },
+  posicionLabel: { fontSize: 13, color: 'rgba(255,255,255,0.7)' },
   posicionLabelActive: { color: '#fff', fontWeight: 'bold' },
   saveBtn: { marginTop: 24, borderRadius: 8 },
 });

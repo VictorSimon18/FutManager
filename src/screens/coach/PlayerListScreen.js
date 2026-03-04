@@ -1,13 +1,17 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { Text, Card, Avatar, FAB, Searchbar } from 'react-native-paper';
+import { Text, Avatar, FAB, Searchbar } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from '../../context/AuthContext';
 import { usePlayers } from '../../hooks/usePlayers';
 import { deletePlayer } from '../../database/services/playerService';
 import { getPositionColor } from '../../utils/positionUtils';
 import EmptyState from '../../components/EmptyState';
 import ConfirmDialog from '../../components/ConfirmDialog';
+
+const GLASS_BG = 'rgba(255,255,255,0.08)';
+const GLASS_BORDER = 'rgba(255,255,255,0.13)';
 
 function getInitials(nombre) {
   if (!nombre) return '?';
@@ -20,16 +24,14 @@ function PlayerCard({ player, onPress, onDelete }) {
   const color = getPositionColor(player.posicion);
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
-      <Card style={[styles.card, { borderLeftColor: color }]}>
-        <Card.Content style={styles.cardContent}>
-          {/* Avatar con iniciales y color por posición */}
+      <View style={[styles.card, { borderLeftColor: color }]}>
+        <View style={styles.cardContent}>
           <Avatar.Text
             size={48}
             label={getInitials(player.nombre)}
             style={{ backgroundColor: color }}
             labelStyle={{ color: '#fff', fontWeight: 'bold' }}
           />
-          {/* Info del jugador */}
           <View style={styles.cardInfo}>
             <Text variant="titleMedium" style={styles.playerName} numberOfLines={1}>
               {player.nombre}
@@ -42,18 +44,16 @@ function PlayerCard({ player, onPress, onDelete }) {
               ) : null}
             </View>
           </View>
-          {/* Dorsal con fondo coloreado por posición */}
           {player.dorsal != null && (
             <View style={[styles.dorsalBadge, { backgroundColor: color + '20', borderColor: color + '60' }]}>
               <Text style={[styles.dorsalText, { color }]}>#{player.dorsal}</Text>
             </View>
           )}
-          {/* Botón eliminar */}
           <TouchableOpacity onPress={onDelete} style={styles.deleteBtn} hitSlop={8}>
-            <Icon name="account-remove" size={22} color="#BDBDBD" />
+            <Icon name="account-remove" size={22} color="rgba(255,255,255,0.3)" />
           </TouchableOpacity>
-        </Card.Content>
-      </Card>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -65,13 +65,11 @@ export default function PlayerListScreen({ navigation }) {
   const [query, setQuery] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  // Refrescar la lista cada vez que la pantalla recibe el foco
   useEffect(() => {
     const unsub = navigation.addListener('focus', refresh);
     return unsub;
   }, [navigation, refresh]);
 
-  // Los jugadores ya vienen ordenados por posición desde la query SQL
   const filtered = players.filter(p =>
     p.nombre.toLowerCase().includes(query.toLowerCase())
   );
@@ -90,12 +88,21 @@ export default function PlayerListScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <LinearGradient
+        colors={['#0f2027', '#203a43', '#2c5364']}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.4, y: 1 }}
+      />
       <View style={styles.header}>
         <Searchbar
           placeholder="Buscar jugador..."
           value={query}
           onChangeText={setQuery}
           style={styles.searchbar}
+          inputStyle={styles.searchbarInput}
+          iconColor="rgba(255,255,255,0.5)"
+          placeholderTextColor="rgba(255,255,255,0.4)"
         />
         <Text variant="bodySmall" style={styles.counter}>
           {filtered.length} jugador{filtered.length !== 1 ? 'es' : ''} en plantilla
@@ -146,19 +153,32 @@ export default function PlayerListScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
-  header: { backgroundColor: '#fff', padding: 16, elevation: 2 },
-  searchbar: { backgroundColor: '#F5F5F5' },
-  counter: { color: '#999', marginTop: 8, textAlign: 'right' },
+  container: { flex: 1, backgroundColor: '#0f2027' },
+  header: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: GLASS_BORDER,
+  },
+  searchbar: {
+    backgroundColor: GLASS_BG,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+  },
+  searchbarInput: { color: '#FFFFFF' },
+  counter: { color: 'rgba(255,255,255,0.45)', marginTop: 8, textAlign: 'right' },
   list: { padding: 16, gap: 10, paddingBottom: 96 },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: GLASS_BG,
     borderRadius: 12,
     borderLeftWidth: 4,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+    padding: 12,
   },
   cardContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   cardInfo: { flex: 1, minWidth: 0 },
-  playerName: { fontWeight: 'bold', color: '#1A1A1A' },
+  playerName: { fontWeight: 'bold', color: '#FFFFFF' },
   cardMeta: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
   posicion: { fontWeight: '600' },
   dorsalBadge: {
@@ -169,10 +189,7 @@ const styles = StyleSheet.create({
     minWidth: 40,
     alignItems: 'center',
   },
-  dorsalText: {
-    fontWeight: 'bold',
-    fontSize: 13,
-  },
+  dorsalText: { fontWeight: 'bold', fontSize: 13 },
   deleteBtn: { padding: 4, marginLeft: 4 },
-  fab: { position: 'absolute', right: 20, bottom: 20, backgroundColor: '#FF6F00' },
+  fab: { position: 'absolute', right: 20, bottom: 20, backgroundColor: '#105E7A' },
 });

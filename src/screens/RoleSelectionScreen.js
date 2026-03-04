@@ -12,7 +12,7 @@ const ROLES_CONFIG = [
     title: 'Entrenador',
     description: 'Gestiona tu equipo, planifica entrenamientos y partidos',
     icon: 'whistle',
-    color: '#FF6F00',
+    color: '#105E7A',
   },
   {
     id: 'player',

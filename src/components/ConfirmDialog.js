@@ -29,7 +29,7 @@ export default function ConfirmDialog({
           <Button onPress={onDismiss}>{cancelLabel}</Button>
           <Button
             onPress={onConfirm}
-            textColor={destructive ? '#D32F2F' : '#FF6F00'}
+            textColor={destructive ? '#D32F2F' : '#105E7A'}
           >
             {confirmLabel}
           </Button>
