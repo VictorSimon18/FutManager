@@ -6,6 +6,7 @@ import {
 } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { WebView } from 'react-native-webview';
 import { getMatchById, updateMatchResult, deleteMatch } from '../../database/services/matchService';
 import { getStatsByMatch, createPlayerStats } from '../../database/services/statsService';
 import { getPlayersByTeam } from '../../database/services/playerService';
@@ -17,6 +18,48 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 const GLASS_BG = 'rgba(255,255,255,0.08)';
 const GLASS_BORDER = 'rgba(255,255,255,0.13)';
 const DIALOG_STYLE = { borderRadius: 8 };
+
+// Color de foco azul para TextInput del entrenador (borde + label activo)
+const INPUT_THEME = { colors: { primary: '#4287B3' } };
+
+/**
+ * Construye el HTML del mini mapa estático (solo visualización, sin interacción).
+ */
+function buildMiniMapHtml(lat, lng, address) {
+  const popup = address ? JSON.stringify(address) : '""';
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    #map { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+    var map = L.map('map', {
+      zoomControl: false,
+      dragging: false,
+      touchZoom: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false,
+      attributionControl: false,
+    }).setView([${lat}, ${lng}], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+    var m = L.marker([${lat}, ${lng}]).addTo(map);
+    var addr = ${popup};
+    if (addr) m.bindPopup(addr).openPopup();
+  <\/script>
+</body>
+</html>`;
+}
 
 function StatsSection({ title }) {
   return (
@@ -239,12 +282,33 @@ export default function MatchDetailScreen({ route, navigation }) {
                 {formatDate(match.fecha)}{match.hora ? `  ·  ${formatTime(match.hora)}` : ''}
               </Text>
             </View>
-            {match.ubicacion ? (
+
+            {/* Mini mapa si hay coordenadas, o solo texto de ubicación */}
+            {match.latitud && match.longitud ? (
+              <View style={styles.miniMapContainer}>
+                <WebView
+                  source={{ html: buildMiniMapHtml(match.latitud, match.longitud, match.ubicacion) }}
+                  style={styles.miniMapWebview}
+                  javaScriptEnabled
+                  scrollEnabled={false}
+                  pointerEvents="none"
+                  originWhitelist={['*']}
+                  mixedContentMode="always"
+                />
+                {match.ubicacion ? (
+                  <View style={[styles.metaRow, { marginTop: 6 }]}>
+                    <Icon name="map-marker" size={14} color="rgba(255,255,255,0.4)" />
+                    <Text variant="bodySmall" style={styles.metaText}>{match.ubicacion}</Text>
+                  </View>
+                ) : null}
+              </View>
+            ) : match.ubicacion ? (
               <View style={styles.metaRow}>
                 <Icon name="map-marker" size={16} color="rgba(255,255,255,0.4)" />
                 <Text variant="bodySmall" style={styles.metaText}>{match.ubicacion}</Text>
               </View>
             ) : null}
+
             <View style={styles.chipsRow}>
               <Chip compact icon={match.es_local ? 'home' : 'airplane'} style={styles.chip} textStyle={styles.chipText}>
                 {match.es_local ? 'Local' : 'Visitante'}
@@ -346,6 +410,7 @@ export default function MatchDetailScreen({ route, navigation }) {
                   value={golesFavor}
                   onChangeText={setGolesFavor}
                   mode="outlined"
+                  theme={INPUT_THEME}
                   keyboardType="numeric"
                   style={styles.goalInput}
                 />
@@ -355,6 +420,7 @@ export default function MatchDetailScreen({ route, navigation }) {
                   value={golesContra}
                   onChangeText={setGolesContra}
                   mode="outlined"
+                  theme={INPUT_THEME}
                   keyboardType="numeric"
                   style={styles.goalInput}
                 />
@@ -415,35 +481,35 @@ export default function MatchDetailScreen({ route, navigation }) {
                   <Switch value={stTitular} onValueChange={setStTitular} trackColor={{ true: '#105E7A', false: '#BDBDBD' }} thumbColor="#fff" />
                 </View>
                 <View style={styles.statsInputRow}>
-                  <TextInput label="Minutos" value={stMinutos} onChangeText={setStMinutos} mode="outlined" keyboardType="numeric" style={styles.miniInput} placeholder="Ej: 90" />
-                  <TextInput label="Pases clave" value={stPasesClave} onChangeText={setStPasesClave} mode="outlined" keyboardType="numeric" style={styles.miniInput} placeholder="Ej: 2" />
-                  <TextInput label="Valoración" value={stValoracion} onChangeText={setStValoracion} mode="outlined" keyboardType="decimal-pad" style={styles.miniInput} placeholder="Ej: 7.5" />
+                  <TextInput label="Minutos" value={stMinutos} onChangeText={setStMinutos} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 90" />
+                  <TextInput label="Pases clave" value={stPasesClave} onChangeText={setStPasesClave} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 2" />
+                  <TextInput label="Valoración" value={stValoracion} onChangeText={setStValoracion} mode="outlined" keyboardType="decimal-pad" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 7.5" />
                 </View>
 
                 <StatsSection title="ATAQUE" />
                 <View style={styles.statsInputRow}>
-                  <TextInput label="Goles" value={stGoles} onChangeText={setStGoles} mode="outlined" keyboardType="numeric" style={styles.miniInput} placeholder="Ej: 0" />
-                  <TextInput label="Asistencias" value={stAsistencias} onChangeText={setStAsistencias} mode="outlined" keyboardType="numeric" style={styles.miniInput} placeholder="Ej: 1" />
+                  <TextInput label="Goles" value={stGoles} onChangeText={setStGoles} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 0" />
+                  <TextInput label="Asistencias" value={stAsistencias} onChangeText={setStAsistencias} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 1" />
                 </View>
                 <View style={[styles.statsInputRow, { marginTop: 8 }]}>
-                  <TextInput label="Tiros puerta" value={stTirosPuerta} onChangeText={setStTirosPuerta} mode="outlined" keyboardType="numeric" style={styles.miniInput} placeholder="Ej: 3" />
-                  <TextInput label="Tiros fuera" value={stTirosFuera} onChangeText={setStTirosFuera} mode="outlined" keyboardType="numeric" style={styles.miniInput} placeholder="Ej: 1" />
-                  <TextInput label="Fuera de juego" value={stFuerasJuego} onChangeText={setStFuerasJuego} mode="outlined" keyboardType="numeric" style={styles.miniInput} placeholder="Ej: 0" />
+                  <TextInput label="Tiros puerta" value={stTirosPuerta} onChangeText={setStTirosPuerta} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 3" />
+                  <TextInput label="Tiros fuera" value={stTirosFuera} onChangeText={setStTirosFuera} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 1" />
+                  <TextInput label="Fuera de juego" value={stFuerasJuego} onChangeText={setStFuerasJuego} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 0" />
                 </View>
 
                 <StatsSection title="DEFENSA" />
                 <View style={styles.statsInputRow}>
-                  <TextInput label="Entradas" value={stEntradas} onChangeText={setStEntradas} mode="outlined" keyboardType="numeric" style={styles.miniInput} placeholder="Ej: 2" />
-                  <TextInput label="Despejes" value={stDespejes} onChangeText={setStDespejes} mode="outlined" keyboardType="numeric" style={styles.miniInput} placeholder="Ej: 4" />
+                  <TextInput label="Entradas" value={stEntradas} onChangeText={setStEntradas} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 2" />
+                  <TextInput label="Despejes" value={stDespejes} onChangeText={setStDespejes} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 4" />
                   {isPortero && (
-                    <TextInput label="Paradas" value={stParadas} onChangeText={setStParadas} mode="outlined" keyboardType="numeric" style={styles.miniInput} placeholder="Ej: 5" />
+                    <TextInput label="Paradas" value={stParadas} onChangeText={setStParadas} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 5" />
                   )}
                 </View>
 
                 <StatsSection title="DISCIPLINA" />
                 <View style={styles.statsInputRow}>
-                  <TextInput label="Amarillas" value={stAmarillas} onChangeText={setStAmarillas} mode="outlined" keyboardType="numeric" style={styles.miniInput} placeholder="Ej: 0" />
-                  <TextInput label="Rojas" value={stRojas} onChangeText={setStRojas} mode="outlined" keyboardType="numeric" style={styles.miniInput} placeholder="Ej: 0" />
+                  <TextInput label="Amarillas" value={stAmarillas} onChangeText={setStAmarillas} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 0" />
+                  <TextInput label="Rojas" value={stRojas} onChangeText={setStRojas} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 0" />
                 </View>
                 {amarillasNum >= 2 && (
                   <Text variant="bodySmall" style={styles.warningText}>
@@ -451,8 +517,8 @@ export default function MatchDetailScreen({ route, navigation }) {
                   </Text>
                 )}
                 <View style={[styles.statsInputRow, { marginTop: 8 }]}>
-                  <TextInput label="Faltas comet." value={stFaltasCometidas} onChangeText={setStFaltasCometidas} mode="outlined" keyboardType="numeric" style={styles.miniInput} placeholder="Ej: 2" />
-                  <TextInput label="Faltas recib." value={stFaltasRecibidas} onChangeText={setStFaltasRecibidas} mode="outlined" keyboardType="numeric" style={styles.miniInput} placeholder="Ej: 3" />
+                  <TextInput label="Faltas comet." value={stFaltasCometidas} onChangeText={setStFaltasCometidas} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 2" />
+                  <TextInput label="Faltas recib." value={stFaltasRecibidas} onChangeText={setStFaltasRecibidas} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 3" />
                 </View>
               </ScrollView>
             </Dialog.ScrollArea>
@@ -541,4 +607,15 @@ const styles = StyleSheet.create({
   miniInput: { flex: 1 },
   warningText: { color: '#E65100', marginTop: 6, marginBottom: 4 },
   snackbar: { backgroundColor: '#333' },
+  miniMapContainer: {
+    marginTop: 4,
+    borderRadius: 10,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+  },
+  miniMapWebview: {
+    height: 200,
+    borderRadius: 10,
+  },
 });

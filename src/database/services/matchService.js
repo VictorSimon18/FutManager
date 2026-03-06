@@ -16,8 +16,8 @@ export async function createMatch(data) {
     const result = await db.runAsync(
       `INSERT INTO partidos
          (equipo_id, rival, fecha, hora, ubicacion, tipo, modalidad,
-          es_local, goles_favor, goles_contra, estado, notas)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          es_local, goles_favor, goles_contra, estado, notas, latitud, longitud)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         data.equipo_id,
         data.rival,
@@ -31,6 +31,8 @@ export async function createMatch(data) {
         data.goles_contra ?? 0,
         data.estado ?? 'programado',
         data.notas ?? null,
+        data.latitud ?? null,
+        data.longitud ?? null,
       ]
     );
     console.log(`[matchService] Partido creado con ID: ${result.lastInsertRowId}`);
@@ -138,7 +140,9 @@ export async function updateMatch(id, data) {
            tipo       = COALESCE(?, tipo),
            modalidad  = COALESCE(?, modalidad),
            es_local   = COALESCE(?, es_local),
-           notas      = COALESCE(?, notas)
+           notas      = COALESCE(?, notas),
+           latitud    = COALESCE(?, latitud),
+           longitud   = COALESCE(?, longitud)
        WHERE id = ?`,
       [
         data.rival ?? null,
@@ -149,6 +153,8 @@ export async function updateMatch(id, data) {
         data.modalidad ?? null,
         data.es_local ?? null,
         data.notas ?? null,
+        data.latitud ?? null,
+        data.longitud ?? null,
         id,
       ]
     );

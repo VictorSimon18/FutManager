@@ -4,6 +4,57 @@ Diario de cambios ordenado de más reciente a más antiguo.
 
 ---
 
+## v0.8 — Estadísticas ampliadas, colores por posición y mejoras de UX
+**Fecha:** 2026-03-04
+
+### Nuevos archivos
+- `src/utils/positionUtils.js` — tres helpers reutilizables: `getPositionColor()`, `getPositionOrder()`, `getPositionGroup()`
+- `src/database/services/teamStatsService.js` — estadísticas agregadas del equipo: `getTeamSeasonStats()`, `getTeamOffensiveStats()`, `getTeamDefensiveStats()`
+- `src/hooks/useTeamStats.js` — hook reactivo para cargar estadísticas del equipo
+- `src/hooks/usePlayerAttendance.js` — hook reactivo para asistencia de un jugador a entrenamientos
+
+### Formato de fechas y horas en formularios
+- Añadidas dos funciones inversas a `dateUtils.js`: `parseDate(DD-MM-YYYY)` → YYYY-MM-DD y `parseTime(HH.MM)` → HH:MM
+- Los formularios de **PlayerFormScreen**, **MatchFormScreen** y **TrainingFormScreen** ahora aceptan y muestran fechas en formato `DD-MM-YYYY` y horas en `HH.MM` (mismo formato que las pantallas de detalle)
+- Al cargar datos para edición se convierten del formato SQLite al de visualización; al guardar se convierten de vuelta
+- Los labels y placeholders de los inputs actualizados (`DD-MM-YYYY`, `HH.MM`)
+
+### Colores y orden por posición (PlayerListScreen / PlayerDetailScreen)
+- `PlayerListScreen`: borde izquierdo de cada card coloreado según el grupo de posición del jugador; fondo y texto del dorsal coloreados en el mismo tono; avatar también coloreado
+- `PlayerDetailScreen`: avatar y borde superior de la cabecera con el color de la posición del jugador
+- Colores por grupo: Portero `#FF6F00`, Defensas `#D32F2F`, Líbero `#FFC107`, Mediocentros `#00AA13`, Delanteros `#1E88E5`
+- Plantilla ordenada por línea (Portero → Defensas → Mediocentros → Delanteros → Líbero) mediante `ORDER BY CASE` en SQL — sin necesidad de ordenar en el cliente
+
+### Estadísticas individuales ampliadas
+- Añadidos 9 nuevos campos a la tabla `estadisticas_jugador` mediante migraciones `ALTER TABLE` seguras: `paradas`, `despejes`, `entradas`, `pases_clave`, `tiros_puerta`, `tiros_fuera`, `faltas_cometidas`, `faltas_recibidas`, `fueras_juego`
+- `createPlayerStats()`, `updateStats()` y `getSeasonStats()` en `statsService.js` actualizados con los nuevos campos
+- Pop-up de estadísticas en **MatchDetailScreen** rediseñado con campos agrupados en cuatro secciones: **General** (minutos, titular, pases clave, valoración), **Ataque** (goles, asistencias, tiros, fuera de juego), **Defensa** (entradas, despejes, paradas — esta última solo si el jugador es Portero) y **Disciplina** (amarillas, rojas, faltas)
+- El pop-up ahora usa un `Dialog.ScrollArea` con scroll para acomodar todos los campos sin ocupar toda la pantalla
+
+### Lógica de tarjetas: 2 amarillas = 1 roja
+- Al **guardar** estadísticas: si `tarjetas_amarillas >= 2`, se fuerza `tarjetas_rojas = Math.max(tarjetas_rojas, 1)`
+- Al **mostrar** estadísticas: si un jugador tiene 2+ amarillas en un partido, se muestra automáticamente el badge de tarjeta roja junto a las amarillas (en la lista de stats del partido y en el historial de la ficha del jugador)
+- Snackbar de aviso al guardar cuando se aplica la regla automática: "2 amarillas = expulsión (roja automática añadida)"
+
+### Placeholders en formulario de estadísticas
+- Los campos numéricos del pop-up de estadísticas arrancan **vacíos** (sin valor "0")
+- Cada campo tiene un placeholder descriptivo: `"Ej: 90"`, `"Ej: 0"`, `"Ej: 7.5"`, etc.
+- Al guardar, un campo vacío se interpreta como 0 (excepto valoración, que queda como null)
+
+### Chips de partidos ajustados al contenido
+- Eliminado el `height: 26` fijo del estilo de chips en **MatchListScreen** que podía recortar el texto
+- Los chips de Local/Visitante, tipo y modalidad ahora se dimensionan según su contenido con la prop `compact`
+
+### Asistencia a entrenamientos en la ficha del jugador
+- Nueva función `getPlayerAttendance(jugadorId, equipoId)` en `trainingService.js`
+- **PlayerDetailScreen** incluye una nueva sección "Asistencia a entrenamientos" con: contador `asistidos / total`, porcentaje y una `ProgressBar` visual de React Native Paper; el texto de valoración cambia según el porcentaje (buena / regular / baja)
+
+### Estadísticas del equipo en HomeCoachScreen
+- Nueva card "Rendimiento del equipo" con datos reales de SQLite: PJ, victorias, empates, derrotas, goles a favor/en contra, porcentaje de victorias, racha actual y máximo goleador
+- La card solo aparece si el equipo tiene al menos un partido finalizado
+
+---
+
 ## v0.7 — Ajustes y mejoras en las pantallas del entrenador
 **Fecha:** 2026-03-02
 

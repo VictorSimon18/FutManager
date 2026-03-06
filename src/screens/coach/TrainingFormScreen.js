@@ -6,6 +6,18 @@ import { AuthContext } from '../../context/AuthContext';
 import { createTraining, getTrainingById, updateTraining } from '../../database/services/trainingService';
 import { formatDate, formatTime, parseDate, parseTime } from '../../utils/dateUtils';
 
+// Color de foco azul para TextInput del entrenador (borde + label activo)
+const INPUT_THEME = { colors: { primary: '#4287B3' } };
+// Tema para selectores: seleccionado en blanco/negro, no seleccionado en blanco
+const SEGMENTED_THEME = {
+  colors: {
+    secondaryContainer: '#FFFFFF',
+    onSecondaryContainer: '#000000',
+    onSurface: '#FFFFFF',
+    outline: 'rgba(255,255,255,0.35)',
+  },
+};
+
 const TIPOS = [
   { value: 'Técnico', label: 'Técnico' },
   { value: 'Táctico', label: 'Táctico' },
@@ -107,6 +119,7 @@ export default function TrainingFormScreen({ route, navigation }) {
           value={fecha}
           onChangeText={setFecha}
           mode="outlined"
+          theme={INPUT_THEME}
           style={styles.input}
           placeholder="DD-MM-YYYY"
           placeholderTextColor="#fff"
@@ -121,6 +134,7 @@ export default function TrainingFormScreen({ route, navigation }) {
             value={horaInicio}
             onChangeText={setHoraInicio}
             mode="outlined"
+            theme={INPUT_THEME}
             style={[styles.input, styles.half]}
             placeholder="HH.MM"
             placeholderTextColor="#fff"
@@ -131,6 +145,7 @@ export default function TrainingFormScreen({ route, navigation }) {
             value={horaFin}
             onChangeText={setHoraFin}
             mode="outlined"
+            theme={INPUT_THEME}
             style={[styles.input, styles.half]}
             placeholder="HH.MM"
             placeholderTextColor="#fff"
@@ -143,6 +158,7 @@ export default function TrainingFormScreen({ route, navigation }) {
           value={ubicacion}
           onChangeText={setUbicacion}
           mode="outlined"
+          theme={INPUT_THEME}
           style={styles.input}
           placeholder="Ciudad Deportiva de Vallecas"
           placeholderTextColor="#fff"
@@ -153,12 +169,14 @@ export default function TrainingFormScreen({ route, navigation }) {
           value={tipo}
           onValueChange={setTipo}
           buttons={TIPOS}
+          theme={SEGMENTED_THEME}
           style={styles.segmented}
         />
         <SegmentedButtons
           value={tipo}
           onValueChange={setTipo}
           buttons={TIPOS2}
+          theme={SEGMENTED_THEME}
           style={[styles.segmented, { marginTop: 8 }]}
         />
 
@@ -168,6 +186,7 @@ export default function TrainingFormScreen({ route, navigation }) {
           value={descripcion}
           onChangeText={setDescripcion}
           mode="outlined"
+          theme={INPUT_THEME}
           style={styles.input}
           multiline
           numberOfLines={4}

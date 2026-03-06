@@ -10,6 +10,18 @@ import { formatDate, parseDate } from '../../utils/dateUtils';
 const GLASS_BG = 'rgba(255,255,255,0.08)';
 const GLASS_BORDER = 'rgba(255,255,255,0.13)';
 
+// Color de foco azul para TextInput del entrenador (borde + label activo)
+const INPUT_THEME = { colors: { primary: '#4287B3' } };
+// Tema para selectores: seleccionado en blanco/negro, no seleccionado en blanco
+const SEGMENTED_THEME = {
+  colors: {
+    secondaryContainer: '#FFFFFF',
+    onSecondaryContainer: '#000000',
+    onSurface: '#FFFFFF',
+    outline: 'rgba(255,255,255,0.35)',
+  },
+};
+
 const POSICIONES = [
   'Portero', 'Defensa Central', 'Lateral Derecho', 'Lateral Izquierdo',
   'Carrilero Derecho', 'Carrilero Izquierdo', 'Mediocentro Defensivo',
@@ -151,6 +163,7 @@ export default function PlayerFormScreen({ route, navigation }) {
           value={nombre}
           onChangeText={setNombre}
           mode="outlined"
+          theme={INPUT_THEME}
           style={styles.input}
           error={!!errors.nombre}
         />
@@ -161,6 +174,7 @@ export default function PlayerFormScreen({ route, navigation }) {
           value={sexo}
           onValueChange={setSexo}
           buttons={SEXO_OPTIONS}
+          theme={SEGMENTED_THEME}
           style={styles.segmented}
         />
 
@@ -169,6 +183,7 @@ export default function PlayerFormScreen({ route, navigation }) {
           value={fechaNacimiento}
           onChangeText={setFechaNacimiento}
           mode="outlined"
+          theme={INPUT_THEME}
           style={styles.input}
           placeholder="DD-MM-YYYY"
           placeholderTextColor="#fff"
@@ -184,6 +199,7 @@ export default function PlayerFormScreen({ route, navigation }) {
           value={dorsal}
           onChangeText={setDorsal}
           mode="outlined"
+          theme={INPUT_THEME}
           style={styles.input}
           keyboardType="numeric"
           error={!!errors.dorsal}
@@ -198,6 +214,7 @@ export default function PlayerFormScreen({ route, navigation }) {
           value={pieDominante}
           onValueChange={setPieDominante}
           buttons={PIE_OPTIONS}
+          theme={SEGMENTED_THEME}
           style={styles.segmented}
         />
 
@@ -208,6 +225,7 @@ export default function PlayerFormScreen({ route, navigation }) {
             value={altura}
             onChangeText={setAltura}
             mode="outlined"
+            theme={INPUT_THEME}
             style={[styles.input, styles.halfInput]}
             keyboardType="decimal-pad"
             placeholder="1.80"
@@ -219,6 +237,7 @@ export default function PlayerFormScreen({ route, navigation }) {
             value={peso}
             onChangeText={setPeso}
             mode="outlined"
+            theme={INPUT_THEME}
             style={[styles.input, styles.halfInput]}
             keyboardType="numeric"
             placeholder="75"

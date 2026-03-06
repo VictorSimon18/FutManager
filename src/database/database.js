@@ -194,5 +194,19 @@ export async function initDatabase() {
     }
   }
 
+  // Columnas de coordenadas para partidos (migración segura)
+  const colsPartidos = [
+    'latitud REAL',
+    'longitud REAL',
+  ];
+  for (const colDef of colsPartidos) {
+    try {
+      await database.execAsync(`ALTER TABLE partidos ADD COLUMN ${colDef};`);
+      console.log(`[DB] Columna añadida a partidos: ${colDef.split(' ')[0]}`);
+    } catch {
+      // La columna ya existe — ignorar el error
+    }
+  }
+
   console.log('[DB] Base de datos inicializada correctamente.');
 }

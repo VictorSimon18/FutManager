@@ -21,6 +21,7 @@ import MatchDetailScreen from '../screens/coach/MatchDetailScreen';
 import TrainingListScreen from '../screens/coach/TrainingListScreen';
 import TrainingFormScreen from '../screens/coach/TrainingFormScreen';
 import TrainingDetailScreen from '../screens/coach/TrainingDetailScreen';
+import MapScreen from '../screens/coach/MapScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -154,6 +155,17 @@ export default function AppNavigator() {
               name="TrainingDetail"
               component={TrainingDetailScreen}
               options={{ title: 'Detalle del entrenamiento', ...coachHeaderOptions }}
+            />
+            {/* Mapa de selección de ubicación */}
+            <Stack.Screen
+              name="MapScreen"
+              component={MapScreen}
+              options={{
+                title: 'Seleccionar ubicación',
+                headerStyle: { backgroundColor: '#FF6F00' },
+                headerTintColor: '#fff',
+                headerTitleStyle: { fontWeight: 'bold' },
+              }}
             />
           </>
         ) : role === 'player' ? (
