@@ -234,11 +234,11 @@ export default function HomeCoachScreen({ navigation }) {
                     </Chip>
                   )}
                 </View>
-                <Text variant="headlineSmall" style={styles.eventTitle}>
+                <Text variant="titleLarge" style={styles.eventTitle} numberOfLines={2}>
                   {proximoEvento.titulo}
                 </Text>
                 {proximoEvento.ubicacion ? (
-                  <Text variant="bodyMedium" style={styles.eventLocation}>
+                  <Text variant="bodyMedium" style={styles.eventLocation} numberOfLines={1} ellipsizeMode="tail">
                     {proximoEvento.ubicacion}
                   </Text>
                 ) : null}
@@ -377,6 +377,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontWeight: 'bold',
     paddingHorizontal: 20,
+    marginTop: 4,
     marginBottom: 12,
     color: '#FFFFFF',
   },

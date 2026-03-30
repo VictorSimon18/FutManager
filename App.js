@@ -8,15 +8,27 @@ import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+// import { useFonts } from 'expo-font';  // ← expo-font ya está instalado
 import AppNavigator from './src/navigation/AppNavigator';
 import { theme } from './src/theme/theme';
 import { initDatabase } from './src/database/database';
 import { seedDatabase } from './src/database/seed';
 import { AuthProvider } from './src/context/AuthContext';
 
+// ── Fuente de emojis ─────────────────────────────────────────────────────────
+// Para activar NotoEmoji:
+//   1. Descarga NotoEmoji-Regular.ttf desde https://fonts.google.com/noto/specimen/Noto+Emoji
+//   2. Colócalo en assets/fonts/NotoEmoji-Regular.ttf
+//   3. Descomenta el import de useFonts arriba y el bloque de carga abajo
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function App() {
   const [dbReady, setDbReady] = useState(false);
   const [dbError, setDbError] = useState(null);
+
+  // const [fontsLoaded] = useFonts({
+  //   NotoEmoji: require('./assets/fonts/NotoEmoji-Regular.ttf'),
+  // });
 
   useEffect(() => {
     async function setupDatabase() {
@@ -33,7 +45,8 @@ export default function App() {
     setupDatabase();
   }, []);
 
-  // Pantalla de carga mientras se inicializa la BD
+  // Pantalla de carga mientras se inicializa la BD (o las fuentes)
+  // Añade || !fontsLoaded a la condición cuando actives expo-font
   if (!dbReady && !dbError) {
     return (
       <SafeAreaProvider>

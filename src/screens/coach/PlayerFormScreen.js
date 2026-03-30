@@ -10,11 +10,12 @@ import { formatDate, parseDate } from '../../utils/dateUtils';
 const GLASS_BG = 'rgba(255,255,255,0.08)';
 const GLASS_BORDER = 'rgba(255,255,255,0.13)';
 
-// Foco blanco: borde + label activo en blanco
+// Foco blanco + texto escrito en blanco
 const INPUT_THEME = {
   colors: {
     primary: '#FFFFFF',
     onSurfaceVariant: '#FFFFFF',
+    onSurface: '#FFFFFF',
     outline: 'rgba(255,255,255,0.15)',
   },
 };
@@ -170,6 +171,7 @@ export default function PlayerFormScreen({ route, navigation }) {
           onChangeText={setNombre}
           mode="outlined"
           theme={INPUT_THEME}
+          textColor="#FFFFFF"
           style={styles.input}
           error={!!errors.nombre}
         />
@@ -190,9 +192,10 @@ export default function PlayerFormScreen({ route, navigation }) {
           onChangeText={setFechaNacimiento}
           mode="outlined"
           theme={INPUT_THEME}
+          textColor="#FFFFFF"
           style={styles.input}
           placeholder="DD-MM-YYYY"
-          placeholderTextColor="#fff"
+          placeholderTextColor="rgba(255,255,255,0.4)"
           keyboardType="numeric"
           error={!!errors.fechaNacimiento}
         />
@@ -206,6 +209,7 @@ export default function PlayerFormScreen({ route, navigation }) {
           onChangeText={setDorsal}
           mode="outlined"
           theme={INPUT_THEME}
+          textColor="#FFFFFF"
           style={styles.input}
           keyboardType="numeric"
           error={!!errors.dorsal}
@@ -232,10 +236,11 @@ export default function PlayerFormScreen({ route, navigation }) {
             onChangeText={setAltura}
             mode="outlined"
             theme={INPUT_THEME}
+            textColor="#FFFFFF"
             style={[styles.input, styles.halfInput]}
             keyboardType="decimal-pad"
             placeholder="1.80"
-            placeholderTextColor="#fff"
+            placeholderTextColor="rgba(255,255,255,0.4)"
             error={!!errors.altura}
           />
           <TextInput
@@ -244,10 +249,11 @@ export default function PlayerFormScreen({ route, navigation }) {
             onChangeText={setPeso}
             mode="outlined"
             theme={INPUT_THEME}
+            textColor="#FFFFFF"
             style={[styles.input, styles.halfInput]}
             keyboardType="numeric"
             placeholder="75"
-            placeholderTextColor="#fff"
+            placeholderTextColor="rgba(255,255,255,0.4)"
             error={!!errors.peso}
           />
         </View>

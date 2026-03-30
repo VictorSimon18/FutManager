@@ -49,9 +49,9 @@
 
 - [✅] MEJORAR EL ESTILO DE LA CREACION DE PARTIDOS Y ENTRENOS
 
-- [] En crear partido Que el tecto que se escribe se vea en blanco
+- [] En crear partido Que el texto que se escribe se vea en blanco
 
-- En proximo evento arreglar el bug visual que hay
+- [] En proximo evento arreglar el bug visual que hay
 
 ## JUGADORES
 

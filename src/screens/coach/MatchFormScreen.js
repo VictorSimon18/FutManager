@@ -7,11 +7,12 @@ import { AuthContext } from '../../context/AuthContext';
 import { createMatch, getMatchById, updateMatch } from '../../database/services/matchService';
 import { formatDate, formatTime, parseDate, parseTime } from '../../utils/dateUtils';
 
-// Foco blanco: borde + label activo en blanco
+// Foco blanco + texto escrito en blanco
 const INPUT_THEME = {
   colors: {
     primary: '#FFFFFF',
     onSurfaceVariant: '#FFFFFF',
+    onSurface: '#FFFFFF',
     outline: 'rgba(255,255,255,0.15)',
   },
 };
@@ -143,7 +144,13 @@ export default function MatchFormScreen({ route, navigation }) {
       } else {
         await createMatch(data);
       }
-      navigation.goBack();
+      // Al editar volvemos a la pantalla anterior (MatchDetail); al crear,
+      // navegamos explícitamente a MatchList para evitar bucle con MapScreen.
+      if (isEditing) {
+        navigation.goBack();
+      } else {
+        navigation.navigate('MatchList');
+      }
     } catch (e) {
       Alert.alert('Error', 'No se pudo guardar el partido. Inténtalo de nuevo.');
     } finally {
@@ -180,6 +187,7 @@ export default function MatchFormScreen({ route, navigation }) {
             onChangeText={setRival}
             mode="outlined"
             theme={INPUT_THEME}
+            textColor="#FFFFFF"
             style={styles.input}
             error={!!errors.rival}
           />
@@ -191,6 +199,7 @@ export default function MatchFormScreen({ route, navigation }) {
               onChangeText={setFecha}
               mode="outlined"
               theme={INPUT_THEME}
+              textColor="#FFFFFF"
               style={[styles.input, styles.flex2]}
               placeholder="DD-MM-YYYY"
               placeholderTextColor="rgba(255,255,255,0.4)"
@@ -203,6 +212,7 @@ export default function MatchFormScreen({ route, navigation }) {
               onChangeText={setHora}
               mode="outlined"
               theme={INPUT_THEME}
+              textColor="#FFFFFF"
               style={[styles.input, styles.flex1]}
               placeholder="HH.MM"
               placeholderTextColor="rgba(255,255,255,0.4)"
@@ -278,6 +288,7 @@ export default function MatchFormScreen({ route, navigation }) {
             onChangeText={setNotas}
             mode="outlined"
             theme={INPUT_THEME}
+            textColor="#FFFFFF"
             style={styles.input}
             multiline
             numberOfLines={3}
