@@ -10,8 +10,14 @@ import { formatDate, parseDate } from '../../utils/dateUtils';
 const GLASS_BG = 'rgba(255,255,255,0.08)';
 const GLASS_BORDER = 'rgba(255,255,255,0.13)';
 
-// Color de foco azul para TextInput del entrenador (borde + label activo)
-const INPUT_THEME = { colors: { primary: '#4287B3' } };
+// Foco blanco: borde + label activo en blanco
+const INPUT_THEME = {
+  colors: {
+    primary: '#FFFFFF',
+    onSurfaceVariant: '#FFFFFF',
+    outline: 'rgba(255,255,255,0.15)',
+  },
+};
 // Tema para selectores: seleccionado en blanco/negro, no seleccionado en blanco
 const SEGMENTED_THEME = {
   colors: {
@@ -252,7 +258,7 @@ export default function PlayerFormScreen({ route, navigation }) {
           loading={saving}
           disabled={saving}
           style={styles.saveBtn}
-          buttonColor="#105E7A"
+          buttonColor="#00AA13"
         >
           {isEditing ? 'Guardar cambios' : 'Crear jugador'}
         </Button>
@@ -265,15 +271,16 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f2027' },
   content: { padding: 16, paddingBottom: 40 },
   sectionTitle: {
-    fontWeight: 'bold',
-    color: '#105E7A',
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 16,
     marginBottom: 4,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
   fieldLabel: { color: 'rgba(255,255,255,0.6)', marginBottom: 6, marginTop: 8 },
-  input: { backgroundColor: '#4287B3', marginBottom: 0 },
+  input: { backgroundColor: 'rgba(255,255,255,0.05)', marginBottom: 0 },
   row: { flexDirection: 'row', gap: 12 },
   halfInput: { flex: 1 },
   segmented: { marginBottom: 8 },

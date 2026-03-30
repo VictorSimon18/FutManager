@@ -3,7 +3,7 @@
 ---
 ## ENTRENADORES
 
-- [ ] Pizarra interactiva para jugadas
+- [✅] Pizarra interactiva para jugadas
 
 - [ ] En "Plantilla", que se guarden los jugadores ordenados por posición. (Portero, defensa, mediocentro, delantero)
 
@@ -29,22 +29,29 @@
 
 - [✅] En las fichas de los jugadores se tiene que ver reflejado la asistencia a los entrenamientos.
 
-- [  ] En "Panel de entranador" --> "Proximo evento", Hacer que se actualice al instante al crear un evento.
+- [✅] En "Panel de entranador" --> "Proximo evento", Hacer que se actualice al instante al crear un evento.
 
-- [  ] Quitar de "Panel de entrenador" el bootn de "+ Nuevo partido".
+- [✅] Quitar de "Panel de entrenador" el bootn de "+ Nuevo partido".
 
-- [  ] Quitar la banda naranja de la pantalla de entrenador.
-
-- [  ] En "Programar partido" poder adjuntar una ruta al campo para que el jugador pueda ir facilmente.
+- [✅] Quitar la banda naranja de la pantalla de entrenador.
 
 - [  ] Libreria para cambiar los emojis y que se vean mas "Cambia naturales"
 
-- [  ] Los textos de campos rellenables como "Fecha *" o "Hora de Inicio" que se vean en blanco.
+- [✅] Los textos de campos rellenables como "Fecha *" o "Hora de Inicio" que se vean en blanco.
 
-- [  ] En los campos rellenables, al seleccionarlos, que no se vea en el verde que se ve ahora si no en un todo mas acorde al azul que hay (4287B3)
+- [] En los campos rellenables, al seleccionarlos, que no se vea en el azul que se ve ahora si no en blanco
 
-- [  ] Que al poner un estadio se pueda poner en un mapa con la librereia "LeafLet" (Prompt ya generado en claude)
+- [✅] Que al poner un estadio se pueda poner en un mapa con la librereia "LeafLet" (Prompt ya generado en claude)
 
+- [✅] En la pizarra añadir una ficha del balon
+
+- [] Cuando se pulsa el boton de crear partido se crea pero te vuelve a meter a elegir la ubicacion en bucle.
+
+- [✅] MEJORAR EL ESTILO DE LA CREACION DE PARTIDOS Y ENTRENOS
+
+- [] En crear partido Que el tecto que se escribe se vea en blanco
+
+- En proximo evento arreglar el bug visual que hay
 
 ## JUGADORES
 

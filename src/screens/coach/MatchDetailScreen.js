@@ -19,8 +19,14 @@ const GLASS_BG = 'rgba(255,255,255,0.08)';
 const GLASS_BORDER = 'rgba(255,255,255,0.13)';
 const DIALOG_STYLE = { borderRadius: 8 };
 
-// Color de foco azul para TextInput del entrenador (borde + label activo)
-const INPUT_THEME = { colors: { primary: '#4287B3' } };
+// Foco blanco: borde + label activo en blanco
+const INPUT_THEME = {
+  colors: {
+    primary: '#FFFFFF',
+    onSurfaceVariant: '#FFFFFF',
+    outline: 'rgba(255,255,255,0.15)',
+  },
+};
 
 /**
  * Construye el HTML del mini mapa estático (solo visualización, sin interacción).

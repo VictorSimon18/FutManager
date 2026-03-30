@@ -6,8 +6,14 @@ import { AuthContext } from '../../context/AuthContext';
 import { createTraining, getTrainingById, updateTraining } from '../../database/services/trainingService';
 import { formatDate, formatTime, parseDate, parseTime } from '../../utils/dateUtils';
 
-// Color de foco azul para TextInput del entrenador (borde + label activo)
-const INPUT_THEME = { colors: { primary: '#4287B3' } };
+// Foco blanco: borde + label activo en blanco
+const INPUT_THEME = {
+  colors: {
+    primary: '#FFFFFF',
+    onSurfaceVariant: '#FFFFFF',
+    outline: 'rgba(255,255,255,0.15)',
+  },
+};
 // Tema para selectores: seleccionado en blanco/negro, no seleccionado en blanco
 const SEGMENTED_THEME = {
   colors: {
@@ -30,7 +36,7 @@ const TIPOS2 = [
 ];
 
 function SectionTitle({ text }) {
-  return <Text variant="titleSmall" style={styles.sectionTitle}>{text}</Text>;
+  return <Text style={styles.sectionTitle}>{text}</Text>;
 }
 
 export default function TrainingFormScreen({ route, navigation }) {
@@ -38,14 +44,14 @@ export default function TrainingFormScreen({ route, navigation }) {
   const trainingId = route.params?.trainingId ?? null;
   const isEditing = trainingId != null;
 
-  const [fecha, setFecha] = useState('');
-  const [horaInicio, setHoraInicio] = useState('');
-  const [horaFin, setHoraFin] = useState('');
-  const [ubicacion, setUbicacion] = useState('');
-  const [tipo, setTipo] = useState('Técnico');
+  const [fecha,       setFecha]       = useState('');
+  const [horaInicio,  setHoraInicio]  = useState('');
+  const [horaFin,     setHoraFin]     = useState('');
+  const [ubicacion,   setUbicacion]   = useState('');
+  const [tipo,        setTipo]        = useState('Técnico');
   const [descripcion, setDescripcion] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [saving,      setSaving]      = useState(false);
+  const [errors,      setErrors]      = useState({});
 
   useEffect(() => {
     if (isEditing) loadTraining();
@@ -82,12 +88,12 @@ export default function TrainingFormScreen({ route, navigation }) {
     setSaving(true);
     try {
       const data = {
-        equipo_id: equipoId,
-        fecha: parseDate(fecha.trim()),
+        equipo_id:   equipoId,
+        fecha:       parseDate(fecha.trim()),
         hora_inicio: horaInicio ? parseTime(horaInicio) : null,
-        hora_fin: horaFin ? parseTime(horaFin) : null,
-        ubicacion: ubicacion || null,
-        tipo: tipo || null,
+        hora_fin:    horaFin    ? parseTime(horaFin)    : null,
+        ubicacion:   ubicacion  || null,
+        tipo:        tipo       || null,
         descripcion: descripcion || null,
       };
       if (isEditing) {
@@ -113,86 +119,94 @@ export default function TrainingFormScreen({ route, navigation }) {
       />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
 
-        <SectionTitle text="Fecha y hora" />
-        <TextInput
-          label="Fecha *"
-          value={fecha}
-          onChangeText={setFecha}
-          mode="outlined"
-          theme={INPUT_THEME}
-          style={styles.input}
-          placeholder="DD-MM-YYYY"
-          placeholderTextColor="#fff"
-          keyboardType="numeric"
-          error={!!errors.fecha}
-        />
-        <HelperText type="error" visible={!!errors.fecha}>{errors.fecha}</HelperText>
-
-        <View style={styles.row}>
+        {/* ── Horario ── */}
+        <SectionTitle text="Horario" />
+        <View style={styles.group}>
           <TextInput
-            label="Hora inicio"
-            value={horaInicio}
-            onChangeText={setHoraInicio}
+            label="Fecha *"
+            value={fecha}
+            onChangeText={setFecha}
             mode="outlined"
             theme={INPUT_THEME}
-            style={[styles.input, styles.half]}
-            placeholder="HH.MM"
-            placeholderTextColor="#fff"
+            style={styles.input}
+            placeholder="DD-MM-YYYY"
+            placeholderTextColor="rgba(255,255,255,0.4)"
             keyboardType="numeric"
+            error={!!errors.fecha}
+          />
+          <HelperText type="error" visible={!!errors.fecha}>{errors.fecha}</HelperText>
+          <View style={styles.row}>
+            <TextInput
+              label="Hora inicio"
+              value={horaInicio}
+              onChangeText={setHoraInicio}
+              mode="outlined"
+              theme={INPUT_THEME}
+              style={[styles.input, styles.half]}
+              placeholder="HH.MM"
+              placeholderTextColor="rgba(255,255,255,0.4)"
+              keyboardType="numeric"
+            />
+            <TextInput
+              label="Hora fin"
+              value={horaFin}
+              onChangeText={setHoraFin}
+              mode="outlined"
+              theme={INPUT_THEME}
+              style={[styles.input, styles.half]}
+              placeholder="HH.MM"
+              placeholderTextColor="rgba(255,255,255,0.4)"
+              keyboardType="numeric"
+            />
+          </View>
+        </View>
+
+        {/* ── Detalles ── */}
+        <SectionTitle text="Detalles" />
+        <View style={styles.group}>
+          <Text style={styles.selectorLabel}>Tipo de sesión</Text>
+          <SegmentedButtons
+            value={tipo}
+            onValueChange={setTipo}
+            buttons={TIPOS}
+            theme={SEGMENTED_THEME}
+            style={styles.segmented}
+          />
+          <SegmentedButtons
+            value={tipo}
+            onValueChange={setTipo}
+            buttons={TIPOS2}
+            theme={SEGMENTED_THEME}
+            style={[styles.segmented, { marginTop: 8 }]}
           />
           <TextInput
-            label="Hora fin"
-            value={horaFin}
-            onChangeText={setHoraFin}
+            label="Ubicación"
+            value={ubicacion}
+            onChangeText={setUbicacion}
             mode="outlined"
             theme={INPUT_THEME}
-            style={[styles.input, styles.half]}
-            placeholder="HH.MM"
-            placeholderTextColor="#fff"
-            keyboardType="numeric"
+            style={[styles.input, { marginTop: 14 }]}
+            placeholder="Ciudad Deportiva de Vallecas"
+            placeholderTextColor="rgba(255,255,255,0.4)"
           />
         </View>
 
-        <TextInput
-          label="Ubicación"
-          value={ubicacion}
-          onChangeText={setUbicacion}
-          mode="outlined"
-          theme={INPUT_THEME}
-          style={styles.input}
-          placeholder="Ciudad Deportiva de Vallecas"
-          placeholderTextColor="#fff"
-        />
-
-        <SectionTitle text="Tipo de sesión" />
-        <SegmentedButtons
-          value={tipo}
-          onValueChange={setTipo}
-          buttons={TIPOS}
-          theme={SEGMENTED_THEME}
-          style={styles.segmented}
-        />
-        <SegmentedButtons
-          value={tipo}
-          onValueChange={setTipo}
-          buttons={TIPOS2}
-          theme={SEGMENTED_THEME}
-          style={[styles.segmented, { marginTop: 8 }]}
-        />
-
+        {/* ── Descripción ── */}
         <SectionTitle text="Descripción" />
-        <TextInput
-          label="Descripción / objetivos de la sesión"
-          value={descripcion}
-          onChangeText={setDescripcion}
-          mode="outlined"
-          theme={INPUT_THEME}
-          style={styles.input}
-          multiline
-          numberOfLines={4}
-          placeholder="Trabajaremos presión alta y salida de balón..."
-          placeholderTextColor="#fff"
-        />
+        <View style={styles.group}>
+          <TextInput
+            label="Descripción / objetivos de la sesión"
+            value={descripcion}
+            onChangeText={setDescripcion}
+            mode="outlined"
+            theme={INPUT_THEME}
+            style={styles.input}
+            multiline
+            numberOfLines={4}
+            placeholder="Trabajaremos presión alta y salida de balón..."
+            placeholderTextColor="rgba(255,255,255,0.4)"
+          />
+        </View>
 
         <Button
           mode="contained"
@@ -200,7 +214,7 @@ export default function TrainingFormScreen({ route, navigation }) {
           loading={saving}
           disabled={saving}
           style={styles.saveBtn}
-          buttonColor="#105E7A"
+          buttonColor="#00AA13"
         >
           {isEditing ? 'Guardar cambios' : 'Programar entrenamiento'}
         </Button>
@@ -211,18 +225,30 @@ export default function TrainingFormScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f2027' },
-  content: { padding: 16, paddingBottom: 40 },
+  content:   { paddingHorizontal: 20, paddingVertical: 24, paddingBottom: 40 },
   sectionTitle: {
-    fontWeight: 'bold',
-    color: '#105E7A',
-    marginTop: 16,
-    marginBottom: 8,
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
+    marginBottom: 8,
+    marginTop: 4,
   },
-  input: { backgroundColor: '#4287B3', marginBottom: 0 },
-  row: { flexDirection: 'row', gap: 12, marginTop: 8 },
-  half: { flex: 1 },
+  group: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  input: { backgroundColor: 'rgba(255,255,255,0.05)', marginBottom: 0 },
+  row:   { flexDirection: 'row', gap: 12, marginTop: 12 },
+  half:  { flex: 1 },
+  selectorLabel: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 8,
+  },
   segmented: {},
-  saveBtn: { marginTop: 24, borderRadius: 8 },
+  saveBtn: { marginTop: 8, borderRadius: 12, paddingVertical: 4 },
 });

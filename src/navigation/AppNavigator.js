@@ -22,6 +22,7 @@ import TrainingListScreen from '../screens/coach/TrainingListScreen';
 import TrainingFormScreen from '../screens/coach/TrainingFormScreen';
 import TrainingDetailScreen from '../screens/coach/TrainingDetailScreen';
 import MapScreen from '../screens/coach/MapScreen';
+import TacticalBoardScreen from '../screens/coach/TacticalBoardScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -162,6 +163,17 @@ export default function AppNavigator() {
               component={MapScreen}
               options={{
                 title: 'Seleccionar ubicación',
+                headerStyle: { backgroundColor: '#FF6F00' },
+                headerTintColor: '#fff',
+                headerTitleStyle: { fontWeight: 'bold' },
+              }}
+            />
+            {/* Pizarra táctica */}
+            <Stack.Screen
+              name="TacticalBoard"
+              component={TacticalBoardScreen}
+              options={{
+                title: 'Pizarra táctica',
                 headerStyle: { backgroundColor: '#FF6F00' },
                 headerTintColor: '#fff',
                 headerTitleStyle: { fontWeight: 'bold' },

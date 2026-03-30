@@ -13,11 +13,12 @@ export default function MapScreen({ route, navigation }) {
     currentLatitude,
     currentLongitude,
     currentAddress,
+    formData, // datos del formulario de origen para preservar al volver
   } = route.params ?? {};
 
   function handleLocationSelect(locationData) {
-    // Devolver la ubicación al formulario de partido mediante params de navegación
-    navigation.navigate('MatchForm', { selectedLocation: locationData });
+    // Devolver la ubicación y reenviar los datos del formulario para restaurarlos
+    navigation.navigate('MatchForm', { selectedLocation: locationData, formData });
   }
 
   return (

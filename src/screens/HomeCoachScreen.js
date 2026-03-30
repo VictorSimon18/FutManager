@@ -1,8 +1,9 @@
-import React, { useContext, useMemo } from 'react';
+import React, { useContext, useMemo, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { Text, Avatar, FAB, Chip } from 'react-native-paper';
+import { Text, Avatar, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useFocusEffect } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext';
 import { usePlayers } from '../hooks/usePlayers';
 import { useTrainings } from '../hooks/useTrainings';
@@ -13,10 +14,19 @@ import { formatDate, formatTime } from '../utils/dateUtils';
 export default function HomeCoachScreen({ navigation }) {
   const { user, equipoId } = useContext(AuthContext);
 
-  const { players, loading: loadingPlayers } = usePlayers(equipoId);
-  const { trainings, upcomingTrainings, loading: loadingTrainings } = useTrainings(equipoId);
-  const { matches, upcomingMatches, loading: loadingMatches } = useMatches(equipoId);
+  const { players, loading: loadingPlayers, refresh: refreshPlayers } = usePlayers(equipoId);
+  const { trainings, upcomingTrainings, loading: loadingTrainings, refresh: refreshTrainings } = useTrainings(equipoId);
+  const { matches, upcomingMatches, loading: loadingMatches, refresh: refreshMatches } = useMatches(equipoId);
   const { stats: teamStats, loading: loadingTeamStats } = useTeamStats(equipoId);
+
+  // Refrescar datos cada vez que la pantalla recibe el foco
+  useFocusEffect(
+    useCallback(() => {
+      refreshMatches();
+      refreshTrainings();
+      refreshPlayers();
+    }, [refreshMatches, refreshTrainings, refreshPlayers])
+  );
 
   const isLoading = loadingPlayers || loadingTrainings || loadingMatches;
 
@@ -97,7 +107,7 @@ export default function HomeCoachScreen({ navigation }) {
             {/* Stats Cards */}
             <View style={styles.statsContainer}>
               <View style={[styles.statCard, styles.orangeCard]}>
-                <Icon name="account-group" size={32} color="#D94865" />
+                <Icon name="account-group" size={32} color="#3a4d8e" />
                 <Text variant="headlineMedium" style={styles.statNumber}>
                   {players.length}
                 </Text>
@@ -305,18 +315,23 @@ export default function HomeCoachScreen({ navigation }) {
                   </Text>
                 </View>
               </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionCard}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('TacticalBoard')}
+              >
+                <View style={styles.actionSurface}>
+                  <Icon name="clipboard-play" size={40} color="#FF6F00" />
+                  <Text variant="bodyMedium" style={styles.actionText}>
+                    Pizarra táctica
+                  </Text>
+                </View>
+              </TouchableOpacity>
             </View>
           </>
         )}
       </ScrollView>
-
-      <FAB
-        icon="plus"
-        style={styles.fab}
-        color="#FFFFFF"
-        label="Nuevo partido"
-        onPress={() => navigation.navigate('MatchForm')}
-      />
     </View>
   );
 }
@@ -326,7 +341,7 @@ const GLASS_BORDER = 'rgba(255,255,255,0.13)';
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f2027' },
-  scrollContent: { paddingBottom: 100 },
+  scrollContent: { paddingBottom: 40 },
 
   // Header
   header: {
@@ -413,6 +428,4 @@ const styles = StyleSheet.create({
     height: 120,
   },
   actionText: { marginTop: 12, textAlign: 'center', color: '#FFFFFF' },
-
-  fab: { position: 'absolute', right: 20, bottom: 20, backgroundColor: '#105E7A' },
 });

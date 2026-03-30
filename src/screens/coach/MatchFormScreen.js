@@ -7,11 +7,14 @@ import { AuthContext } from '../../context/AuthContext';
 import { createMatch, getMatchById, updateMatch } from '../../database/services/matchService';
 import { formatDate, formatTime, parseDate, parseTime } from '../../utils/dateUtils';
 
-const GLASS_BG     = 'rgba(255,255,255,0.08)';
-const GLASS_BORDER = 'rgba(255,255,255,0.13)';
-
-// Color de foco azul para TextInput del entrenador (borde + label activo)
-const INPUT_THEME = { colors: { primary: '#4287B3' } };
+// Foco blanco: borde + label activo en blanco
+const INPUT_THEME = {
+  colors: {
+    primary: '#FFFFFF',
+    onSurfaceVariant: '#FFFFFF',
+    outline: 'rgba(255,255,255,0.15)',
+  },
+};
 // Tema para selectores: seleccionado en blanco/negro, no seleccionado en blanco
 const SEGMENTED_THEME = {
   colors: {
@@ -37,7 +40,7 @@ const MODALIDADES = [
 ];
 
 function SectionTitle({ text }) {
-  return <Text variant="titleSmall" style={styles.sectionTitle}>{text}</Text>;
+  return <Text style={styles.sectionTitle}>{text}</Text>;
 }
 
 export default function MatchFormScreen({ route, navigation }) {
@@ -70,9 +73,22 @@ export default function MatchFormScreen({ route, navigation }) {
     setUbicacion(loc.address || loc.name || '');
     setLatitud(loc.latitude  ?? null);
     setLongitud(loc.longitude ?? null);
-    // Limpiar el param para no reprocesar en siguientes focuses
     navigation.setParams({ selectedLocation: undefined });
   }, [route.params?.selectedLocation]);
+
+  // Restaurar datos del formulario al volver del mapa (por si el componente se desmontó)
+  useEffect(() => {
+    const fd = route.params?.formData;
+    if (!fd) return;
+    setRival(fd.rival ?? '');
+    setFecha(fd.fecha ?? '');
+    setHora(fd.hora ?? '');
+    setTipo(fd.tipo ?? 'liga');
+    setModalidad(fd.modalidad ?? '11 vs 11');
+    setEsLocal(fd.esLocal ?? true);
+    setNotas(fd.notas ?? '');
+    navigation.setParams({ formData: undefined });
+  }, [route.params?.formData]);
 
   async function loadMatch() {
     try {
@@ -140,6 +156,8 @@ export default function MatchFormScreen({ route, navigation }) {
       currentLatitude:  latitud  ?? undefined,
       currentLongitude: longitud ?? undefined,
       currentAddress:   ubicacion || undefined,
+      // Preservar el estado del formulario para restaurarlo al volver
+      formData: { rival, fecha, hora, tipo, modalidad, esLocal, notas },
     });
   }
 
@@ -153,111 +171,118 @@ export default function MatchFormScreen({ route, navigation }) {
       />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
 
-        <SectionTitle text="Datos del partido" />
-        <TextInput
-          label="Rival *"
-          value={rival}
-          onChangeText={setRival}
-          mode="outlined"
-          theme={INPUT_THEME}
-          style={styles.input}
-          error={!!errors.rival}
-        />
-        <HelperText type="error" visible={!!errors.rival}>{errors.rival}</HelperText>
-
-        <View style={styles.row}>
+        {/* ── Información del partido ── */}
+        <SectionTitle text="Información del partido" />
+        <View style={styles.group}>
           <TextInput
-            label="Fecha *"
-            value={fecha}
-            onChangeText={setFecha}
+            label="Rival *"
+            value={rival}
+            onChangeText={setRival}
             mode="outlined"
             theme={INPUT_THEME}
-            style={[styles.input, styles.flex2]}
-            placeholder="DD-MM-YYYY"
-            placeholderTextColor="#fff"
-            keyboardType="numeric"
-            error={!!errors.fecha}
+            style={styles.input}
+            error={!!errors.rival}
           />
-          <TextInput
-            label="Hora"
-            value={hora}
-            onChangeText={setHora}
-            mode="outlined"
-            theme={INPUT_THEME}
-            style={[styles.input, styles.flex1]}
-            placeholder="HH.MM"
-            placeholderTextColor="#fff"
-            keyboardType="numeric"
-          />
-        </View>
-        <HelperText type="error" visible={!!errors.fecha}>{errors.fecha}</HelperText>
-
-        {/* ── Selector de ubicación con mapa ── */}
-        <SectionTitle text="Ubicación" />
-        {ubicacion ? (
-          // Hay ubicación seleccionada → mostrar dirección con botón para cambiar
-          <View style={styles.locationCard}>
-            <View style={styles.locationInfo}>
-              <Icon name="map-marker" size={20} color="#00AA13" />
-              <Text variant="bodyMedium" style={styles.locationText} numberOfLines={2}>
-                {ubicacion}
-              </Text>
-            </View>
-            <TouchableOpacity style={styles.changeBtn} onPress={abrirMapa} activeOpacity={0.75}>
-              <Icon name="pencil" size={15} color="#FF6F00" />
-              <Text style={styles.changeBtnText}>Cambiar</Text>
-            </TouchableOpacity>
+          <HelperText type="error" visible={!!errors.rival}>{errors.rival}</HelperText>
+          <View style={styles.row}>
+            <TextInput
+              label="Fecha *"
+              value={fecha}
+              onChangeText={setFecha}
+              mode="outlined"
+              theme={INPUT_THEME}
+              style={[styles.input, styles.flex2]}
+              placeholder="DD-MM-YYYY"
+              placeholderTextColor="rgba(255,255,255,0.4)"
+              keyboardType="numeric"
+              error={!!errors.fecha}
+            />
+            <TextInput
+              label="Hora"
+              value={hora}
+              onChangeText={setHora}
+              mode="outlined"
+              theme={INPUT_THEME}
+              style={[styles.input, styles.flex1]}
+              placeholder="HH.MM"
+              placeholderTextColor="rgba(255,255,255,0.4)"
+              keyboardType="numeric"
+            />
           </View>
-        ) : (
-          // Sin ubicación → botón para abrir el mapa
-          <TouchableOpacity style={styles.mapPlaceholder} onPress={abrirMapa} activeOpacity={0.75}>
-            <Icon name="map-search" size={28} color="rgba(255,255,255,0.5)" />
-            <Text style={styles.mapPlaceholderText}>Seleccionar ubicación en el mapa</Text>
-          </TouchableOpacity>
-        )}
-
-        <SectionTitle text="Tipo de partido" />
-        <SegmentedButtons
-          value={tipo}
-          onValueChange={setTipo}
-          buttons={TIPOS}
-          theme={SEGMENTED_THEME}
-          style={styles.segmented}
-        />
-
-        <SectionTitle text="Modalidad" />
-        <SegmentedButtons
-          value={modalidad}
-          onValueChange={setModalidad}
-          buttons={MODALIDADES}
-          theme={SEGMENTED_THEME}
-          style={styles.segmented}
-        />
-
-        <SectionTitle text="Condición" />
-        <View style={styles.switchRow}>
-          <Text variant="bodyMedium" style={styles.switchLabel}>
-            {esLocal ? '🏠 Local' : '✈️ Visitante'}
-          </Text>
-          <Switch
-            value={esLocal}
-            onValueChange={setEsLocal}
-            trackColor={{ true: '#105E7A', false: '#BDBDBD' }}
-            thumbColor="#fff"
-          />
+          <HelperText type="error" visible={!!errors.fecha}>{errors.fecha}</HelperText>
         </View>
 
+        {/* ── Detalles ── */}
+        <SectionTitle text="Detalles" />
+        <View style={styles.group}>
+          <Text style={styles.selectorLabel}>Tipo de partido</Text>
+          <SegmentedButtons
+            value={tipo}
+            onValueChange={setTipo}
+            buttons={TIPOS}
+            theme={SEGMENTED_THEME}
+            style={styles.segmented}
+          />
+          <Text style={[styles.selectorLabel, { marginTop: 14 }]}>Modalidad</Text>
+          <SegmentedButtons
+            value={modalidad}
+            onValueChange={setModalidad}
+            buttons={MODALIDADES}
+            theme={SEGMENTED_THEME}
+            style={styles.segmented}
+          />
+          <Text style={[styles.selectorLabel, { marginTop: 14 }]}>Condición</Text>
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>
+              {esLocal ? '🏠 Local' : '✈️ Visitante'}
+            </Text>
+            <Switch
+              value={esLocal}
+              onValueChange={setEsLocal}
+              trackColor={{ true: '#FFFFFF', false: '#555' }}
+              thumbColor={esLocal ? '#1A1A2E' : '#fff'}
+            />
+          </View>
+        </View>
+
+        {/* ── Ubicación ── */}
+        <SectionTitle text="Ubicación" />
+        <View style={styles.group}>
+          {ubicacion ? (
+            <View style={styles.locationCard}>
+              <View style={styles.locationInfo}>
+                <Icon name="map-marker" size={20} color="#00AA13" />
+                <Text style={styles.locationText} numberOfLines={2}>
+                  {ubicacion}
+                </Text>
+              </View>
+              <TouchableOpacity style={styles.changeBtn} onPress={abrirMapa} activeOpacity={0.75}>
+                <Icon name="pencil" size={15} color="#FF6F00" />
+                <Text style={styles.changeBtnText}>Cambiar</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.mapPlaceholder} onPress={abrirMapa} activeOpacity={0.75}>
+              <Icon name="map-search" size={28} color="rgba(255,255,255,0.5)" />
+              <Text style={styles.mapPlaceholderText}>Seleccionar ubicación en el mapa</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* ── Notas ── */}
         <SectionTitle text="Notas" />
-        <TextInput
-          label="Notas adicionales"
-          value={notas}
-          onChangeText={setNotas}
-          mode="outlined"
-          theme={INPUT_THEME}
-          style={styles.input}
-          multiline
-          numberOfLines={3}
-        />
+        <View style={styles.group}>
+          <TextInput
+            label="Notas adicionales"
+            value={notas}
+            onChangeText={setNotas}
+            mode="outlined"
+            theme={INPUT_THEME}
+            style={styles.input}
+            multiline
+            numberOfLines={3}
+          />
+        </View>
 
         <Button
           mode="contained"
@@ -265,7 +290,7 @@ export default function MatchFormScreen({ route, navigation }) {
           loading={saving}
           disabled={saving}
           style={styles.saveBtn}
-          buttonColor="#105E7A"
+          buttonColor="#00AA13"
         >
           {isEditing ? 'Guardar cambios' : 'Crear partido'}
         </Button>
@@ -276,42 +301,51 @@ export default function MatchFormScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f2027' },
-  content:   { padding: 16, paddingBottom: 40 },
+  content:   { paddingHorizontal: 20, paddingVertical: 24, paddingBottom: 40 },
   sectionTitle: {
-    fontWeight: 'bold',
-    color: '#105E7A',
-    marginTop: 16,
-    marginBottom: 8,
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
+    marginBottom: 8,
+    marginTop: 4,
   },
-  input:     { backgroundColor: '#4287B3', marginBottom: 0 },
-  row:       { flexDirection: 'row', gap: 12 },
-  flex1:     { flex: 1 },
-  flex2:     { flex: 2 },
+  group: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  input:  { backgroundColor: 'rgba(255,255,255,0.05)', marginBottom: 0 },
+  row:    { flexDirection: 'row', gap: 12, marginTop: 12 },
+  flex1:  { flex: 1 },
+  flex2:  { flex: 2 },
+  selectorLabel: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 8,
+  },
   segmented: { marginBottom: 4 },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: GLASS_BG,
-    borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    padding: 16,
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 8,
-    marginBottom: 4,
+    padding: 12,
+    marginTop: 4,
   },
-  switchLabel: { fontWeight: '600', color: '#FFFFFF' },
-  saveBtn: { marginTop: 24, borderRadius: 8 },
+  switchLabel: { fontWeight: '600', color: '#FFFFFF', fontSize: 14 },
+  saveBtn: { marginTop: 8, borderRadius: 12, paddingVertical: 4 },
 
   // Selector de ubicación — sin ubicación seleccionada
   mapPlaceholder: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: GLASS_BG,
     borderWidth: 1,
-    borderColor: GLASS_BORDER,
+    borderColor: 'rgba(255,255,255,0.15)',
     borderStyle: 'dashed',
     borderRadius: 8,
     padding: 16,
@@ -326,7 +360,6 @@ const styles = StyleSheet.create({
   locationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: GLASS_BG,
     borderWidth: 1,
     borderColor: 'rgba(0,170,19,0.35)',
     borderRadius: 8,
@@ -343,6 +376,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     flex: 1,
     lineHeight: 20,
+    fontSize: 14,
   },
   changeBtn: {
     flexDirection: 'row',

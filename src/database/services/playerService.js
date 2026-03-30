@@ -55,20 +55,20 @@ export async function getPlayersByTeam(equipoId) {
        ORDER BY
          CASE posicion
            WHEN 'Portero'               THEN 1
-           WHEN 'Defensa Central'       THEN 10
-           WHEN 'Lateral Derecho'       THEN 11
-           WHEN 'Lateral Izquierdo'     THEN 12
-           WHEN 'Carrilero Derecho'     THEN 13
-           WHEN 'Carrilero Izquierdo'   THEN 14
-           WHEN 'Líbero'                THEN 19
-           WHEN 'Mediocentro Defensivo' THEN 20
-           WHEN 'Mediocentro'           THEN 21
-           WHEN 'Mediapunta'            THEN 22
-           WHEN 'Extremo Izquierdo'     THEN 30
-           WHEN 'Extremo Derecho'       THEN 31
-           WHEN 'Delantero'             THEN 32
-           ELSE 99
-         END,
+           WHEN 'Defensa Central'       THEN 2
+           WHEN 'Lateral Derecho'       THEN 3
+           WHEN 'Lateral Izquierdo'     THEN 4
+           WHEN 'Carrilero Derecho'     THEN 5
+           WHEN 'Carrilero Izquierdo'   THEN 6
+           WHEN 'Líbero'                THEN 7
+           WHEN 'Mediocentro Defensivo' THEN 8
+           WHEN 'Mediocentro'           THEN 9
+           WHEN 'Mediapunta'            THEN 10
+           WHEN 'Extremo Izquierdo'     THEN 11
+           WHEN 'Extremo Derecho'       THEN 12
+           WHEN 'Delantero'             THEN 13
+           ELSE 14
+         END ASC,
          dorsal ASC`,
       [equipoId]
     );
