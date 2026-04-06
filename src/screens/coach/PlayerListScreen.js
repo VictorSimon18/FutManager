@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Alert, Image } from 'react-native';
 import { Text, Avatar, FAB, Searchbar } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,12 +26,19 @@ function PlayerCard({ player, onPress, onDelete }) {
     <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
       <View style={[styles.card, { borderLeftColor: color }]}>
         <View style={styles.cardContent}>
-          <Avatar.Text
-            size={48}
-            label={getInitials(player.nombre)}
-            style={{ backgroundColor: color }}
-            labelStyle={{ color: '#fff', fontWeight: 'bold' }}
-          />
+          {player.foto_url ? (
+            <Image
+              source={{ uri: player.foto_url }}
+              style={[styles.playerPhoto, { borderColor: color }]}
+            />
+          ) : (
+            <Avatar.Text
+              size={48}
+              label={getInitials(player.nombre)}
+              style={{ backgroundColor: color }}
+              labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+            />
+          )}
           <View style={styles.cardInfo}>
             <Text variant="titleMedium" style={styles.playerName} numberOfLines={1}>
               {player.nombre}
@@ -70,9 +77,14 @@ export default function PlayerListScreen({ navigation }) {
     return unsub;
   }, [navigation, refresh]);
 
-  const filtered = players.filter(p =>
-    p.nombre.toLowerCase().includes(query.toLowerCase())
-  );
+  const filtered = players
+    .filter(p => p.nombre.toLowerCase().includes(query.toLowerCase()))
+    .sort((a, b) => {
+      if (a.dorsal == null && b.dorsal == null) return 0;
+      if (a.dorsal == null) return 1;
+      if (b.dorsal == null) return -1;
+      return a.dorsal - b.dorsal;
+    });
 
   async function handleDelete() {
     if (!deleteTarget) return;
@@ -176,6 +188,7 @@ const styles = StyleSheet.create({
     borderColor: GLASS_BORDER,
     padding: 12,
   },
+  playerPhoto: { width: 48, height: 48, borderRadius: 24, borderWidth: 2 },
   cardContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   cardInfo: { flex: 1, minWidth: 0 },
   playerName: { fontWeight: 'bold', color: '#FFFFFF' },

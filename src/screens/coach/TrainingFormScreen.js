@@ -48,7 +48,6 @@ export default function TrainingFormScreen({ route, navigation }) {
   const [fecha,       setFecha]       = useState('');
   const [horaInicio,  setHoraInicio]  = useState('');
   const [horaFin,     setHoraFin]     = useState('');
-  const [ubicacion,   setUbicacion]   = useState('');
   const [tipo,        setTipo]        = useState('Técnico');
   const [descripcion, setDescripcion] = useState('');
   const [saving,      setSaving]      = useState(false);
@@ -65,7 +64,6 @@ export default function TrainingFormScreen({ route, navigation }) {
       setFecha(t.fecha ? formatDate(t.fecha) : '');
       setHoraInicio(t.hora_inicio ? formatTime(t.hora_inicio) : '');
       setHoraFin(t.hora_fin ? formatTime(t.hora_fin) : '');
-      setUbicacion(t.ubicacion ?? '');
       setTipo(t.tipo ?? 'Técnico');
       setDescripcion(t.descripcion ?? '');
     } catch (e) {
@@ -93,7 +91,6 @@ export default function TrainingFormScreen({ route, navigation }) {
         fecha:       parseDate(fecha.trim()),
         hora_inicio: horaInicio ? parseTime(horaInicio) : null,
         hora_fin:    horaFin    ? parseTime(horaFin)    : null,
-        ubicacion:   ubicacion  || null,
         tipo:        tipo       || null,
         descripcion: descripcion || null,
       };
@@ -182,17 +179,6 @@ export default function TrainingFormScreen({ route, navigation }) {
             buttons={TIPOS2}
             theme={SEGMENTED_THEME}
             style={[styles.segmented, { marginTop: 8 }]}
-          />
-          <TextInput
-            label="Ubicación"
-            value={ubicacion}
-            onChangeText={setUbicacion}
-            mode="outlined"
-            theme={INPUT_THEME}
-            textColor="#FFFFFF"
-            style={[styles.input, { marginTop: 14 }]}
-            placeholder="Ciudad Deportiva de Vallecas"
-            placeholderTextColor="rgba(255,255,255,0.4)"
           />
         </View>
 

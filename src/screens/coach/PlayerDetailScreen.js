@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, TouchableOpacity, Image, ActionSheetIOS, Platform } from 'react-native';
 import { Text, Avatar, Button, Divider, ActivityIndicator, ProgressBar } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../../context/AuthContext';
-import { getPlayerById, deletePlayer } from '../../database/services/playerService';
+import { getPlayerById, deletePlayer, updatePlayer } from '../../database/services/playerService';
 import { getSeasonStats, getStatsByPlayer } from '../../database/services/statsService';
 import { formatDate } from '../../utils/dateUtils';
 import { getPositionColor } from '../../utils/positionUtils';
@@ -30,6 +31,7 @@ export default function PlayerDetailScreen({ route, navigation }) {
   const [matchStats, setMatchStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const { attendance } = usePlayerAttendance(playerId, equipoId);
 
@@ -56,6 +58,61 @@ export default function PlayerDetailScreen({ route, navigation }) {
     const unsub = navigation.addListener('focus', load);
     return unsub;
   }, [load, navigation]);
+
+  async function pickPhoto(useCamera) {
+    try {
+      let result;
+      if (useCamera) {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permiso denegado', 'Necesitas permitir el acceso a la cámara.');
+          return;
+        }
+        result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.7,
+        });
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permiso denegado', 'Necesitas permitir el acceso a la galería.');
+          return;
+        }
+        result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.7,
+        });
+      }
+      if (result.canceled) return;
+      const uri = result.assets[0].uri;
+      setUploadingPhoto(true);
+      await updatePlayer(playerId, { foto_url: uri });
+      setPlayer(prev => ({ ...prev, foto_url: uri }));
+    } catch (e) {
+      Alert.alert('Error', 'No se pudo actualizar la foto.');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
+
+  function handlePhotoPress() {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options: ['Cancelar', 'Cámara', 'Galería'], cancelButtonIndex: 0 },
+        idx => { if (idx === 1) pickPhoto(true); else if (idx === 2) pickPhoto(false); }
+      );
+    } else {
+      Alert.alert('Foto de perfil', '¿Desde dónde quieres añadir la foto?', [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Cámara', onPress: () => pickPhoto(true) },
+        { text: 'Galería', onPress: () => pickPhoto(false) },
+      ]);
+    }
+  }
 
   async function handleDelete() {
     try {
@@ -100,12 +157,23 @@ export default function PlayerDetailScreen({ route, navigation }) {
         {/* Cabecera jugador */}
         <View style={[styles.headerCard, { borderTopColor: posColor }]}>
           <View style={styles.headerContent}>
-            <Avatar.Text
-              size={72}
-              label={initials}
-              style={[styles.avatar, { backgroundColor: posColor }]}
-              labelStyle={styles.avatarLabel}
-            />
+            <TouchableOpacity onPress={handlePhotoPress} activeOpacity={0.8} style={styles.avatarWrapper}>
+              {player.foto_url ? (
+                <Image source={{ uri: player.foto_url }} style={[styles.avatarImage, { borderColor: posColor }]} />
+              ) : (
+                <Avatar.Text
+                  size={72}
+                  label={initials}
+                  style={[styles.avatar, { backgroundColor: posColor }]}
+                  labelStyle={styles.avatarLabel}
+                />
+              )}
+              <View style={[styles.cameraOverlay, { borderColor: posColor }]}>
+                {uploadingPhoto
+                  ? <ActivityIndicator size={12} color="#fff" />
+                  : <Icon name="camera" size={14} color="#fff" />}
+              </View>
+            </TouchableOpacity>
             <View style={styles.headerInfo}>
               <Text variant="headlineSmall" style={styles.nombre}>{player.nombre}</Text>
               {player.posicion ? (
@@ -289,8 +357,17 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   headerContent: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  avatarWrapper: { position: 'relative' },
   avatar: {},
+  avatarImage: { width: 72, height: 72, borderRadius: 36, borderWidth: 2 },
   avatarLabel: { color: '#fff', fontWeight: 'bold', fontSize: 24 },
+  cameraOverlay: {
+    position: 'absolute', bottom: 0, right: 0,
+    width: 24, height: 24, borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    borderWidth: 1,
+    justifyContent: 'center', alignItems: 'center',
+  },
   headerInfo: { flex: 1 },
   nombre: { fontWeight: 'bold', color: '#FFFFFF' },
   posicion: { fontWeight: '600', marginTop: 2 },

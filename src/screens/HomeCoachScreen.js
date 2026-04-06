@@ -37,11 +37,11 @@ export default function HomeCoachScreen({ navigation }) {
       const p = upcomingMatches[0];
       eventos.push({
         tipo: 'partido',
+        id: p.id,
         titulo: `Partido vs. ${p.rival}`,
         fecha: p.fecha,
         hora: p.hora,
         ubicacion: p.ubicacion,
-        modalidad: p.modalidad,
       });
     }
 
@@ -49,11 +49,11 @@ export default function HomeCoachScreen({ navigation }) {
       const t = upcomingTrainings[0];
       eventos.push({
         tipo: 'entrenamiento',
+        id: t.id,
         titulo: t.tipo || 'Entrenamiento',
         fecha: t.fecha,
         hora: t.hora_inicio,
         ubicacion: t.ubicacion,
-        modalidad: null,
       });
     }
 
@@ -67,6 +67,16 @@ export default function HomeCoachScreen({ navigation }) {
 
     return eventos[0];
   }, [upcomingMatches, upcomingTrainings]);
+
+  const trainingsThisMonth = useMemo(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    return trainings.filter(t => {
+      const d = new Date(t.fecha);
+      return d.getFullYear() === year && d.getMonth() === month;
+    }).length;
+  }, [trainings]);
 
   function rachaLabel(tipo, cantidad) {
     if (!tipo || cantidad === 0) return null;
@@ -106,8 +116,8 @@ export default function HomeCoachScreen({ navigation }) {
           <>
             {/* Stats Cards */}
             <View style={styles.statsContainer}>
-              <View style={[styles.statCard, styles.orangeCard]}>
-                <Icon name="account-group" size={32} color="#3a4d8e" />
+              <View style={[styles.statCard, styles.purpleCard]}>
+                <Icon name="account-group" size={32} color="#9C27B0" />
                 <Text variant="headlineMedium" style={styles.statNumber}>
                   {players.length}
                 </Text>
@@ -119,10 +129,10 @@ export default function HomeCoachScreen({ navigation }) {
               <View style={[styles.statCard, styles.greenCard]}>
                 <Icon name="calendar-check" size={32} color="#00AA13" />
                 <Text variant="headlineMedium" style={styles.statNumber}>
-                  {trainings.length}
+                  {trainingsThisMonth}
                 </Text>
                 <Text variant="bodySmall" style={styles.statLabel}>
-                  Entrenamientos
+                  Entrenos este mes
                 </Text>
               </View>
 
@@ -184,7 +194,7 @@ export default function HomeCoachScreen({ navigation }) {
                       <Text variant="titleLarge" style={[styles.teamStatNum, { color: '#D94865' }]}>
                         {teamStats.goles_contra}
                       </Text>
-                      <Text variant="bodySmall" style={styles.teamStatLabel}>En contra</Text>
+                      <Text variant="bodySmall" style={styles.teamStatLabel}>Goles en contra</Text>
                     </View>
                     <View style={styles.teamStatItem}>
                       <Text variant="titleLarge" style={[styles.teamStatNum, { color: '#43A047' }]}>
@@ -223,34 +233,50 @@ export default function HomeCoachScreen({ navigation }) {
               Próximo evento
             </Text>
             {proximoEvento ? (
-              <View style={styles.glassCard}>
-                <View style={styles.eventHeader}>
-                  <Chip icon="calendar" style={styles.eventChip} textStyle={styles.chipText}>
-                    {formatDate(proximoEvento.fecha)}{proximoEvento.hora ? `, ${formatTime(proximoEvento.hora)}` : ''}
-                  </Chip>
-                  {proximoEvento.modalidad && (
-                    <Chip icon="soccer-field" mode="outlined" style={styles.eventChipOutlined} textStyle={styles.chipText}>
-                      {proximoEvento.modalidad}
+              <TouchableOpacity
+                style={styles.eventCardWrapper}
+                activeOpacity={0.8}
+                onPress={() => {
+                  if (proximoEvento.tipo === 'partido') {
+                    navigation.navigate('MatchDetail', { matchId: proximoEvento.id });
+                  } else {
+                    navigation.navigate('TrainingDetail', { trainingId: proximoEvento.id });
+                  }
+                }}
+              >
+                <View style={styles.glassCardInner}>
+                  <View style={styles.eventHeader}>
+                    <Chip icon="calendar" style={styles.eventChip} textStyle={styles.chipText}>
+                      {formatDate(proximoEvento.fecha)}{proximoEvento.hora ? `, ${formatTime(proximoEvento.hora)}` : ''}
                     </Chip>
-                  )}
-                </View>
-                <Text variant="titleLarge" style={styles.eventTitle} numberOfLines={2}>
-                  {proximoEvento.titulo}
-                </Text>
-                {proximoEvento.ubicacion ? (
-                  <Text variant="bodyMedium" style={styles.eventLocation} numberOfLines={1} ellipsizeMode="tail">
-                    {proximoEvento.ubicacion}
+                    <Chip
+                      icon={proximoEvento.tipo === 'partido' ? 'soccer' : 'whistle'}
+                      mode="outlined"
+                      style={styles.eventChipOutlined}
+                      textStyle={styles.chipText}
+                    >
+                      {proximoEvento.tipo === 'partido' ? 'Partido' : 'Entrenamiento'}
+                    </Chip>
+                  </View>
+                  <Text variant="titleLarge" style={styles.eventTitle} numberOfLines={2}>
+                    {proximoEvento.titulo}
                   </Text>
-                ) : null}
-                <View style={styles.eventFooter}>
-                  <View style={styles.attendanceContainer}>
-                    <Icon name="account-check" size={20} color="#00AA13" />
-                    <Text variant="bodyMedium" style={styles.attendanceText}>
-                      {players.length} jugadores en plantilla
+                  {proximoEvento.ubicacion ? (
+                    <Text variant="bodyMedium" style={styles.eventLocation} numberOfLines={1} ellipsizeMode="tail">
+                      {proximoEvento.ubicacion}
                     </Text>
+                  ) : null}
+                  <View style={styles.eventFooter}>
+                    <View style={styles.attendanceContainer}>
+                      <Icon name="account-check" size={20} color="#00AA13" />
+                      <Text variant="bodyMedium" style={styles.attendanceText}>
+                        {players.length} jugadores en plantilla
+                      </Text>
+                    </View>
+                    <Icon name="chevron-right" size={20} color="rgba(255,255,255,0.3)" />
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             ) : (
               <View style={styles.glassCard}>
                 <Text variant="bodyMedium" style={styles.noEventText}>
@@ -264,19 +290,6 @@ export default function HomeCoachScreen({ navigation }) {
               Acciones rápidas
             </Text>
             <View style={styles.actionsContainer}>
-              <TouchableOpacity
-                style={styles.actionCard}
-                activeOpacity={0.7}
-                onPress={() => navigation.navigate('TrainingForm')}
-              >
-                <View style={styles.actionSurface}>
-                  <Icon name="calendar-plus" size={40} color="#105E7A" />
-                  <Text variant="bodyMedium" style={styles.actionText}>
-                    Programar entrenamiento
-                  </Text>
-                </View>
-              </TouchableOpacity>
-
               <TouchableOpacity
                 style={styles.actionCard}
                 activeOpacity={0.7}
@@ -368,7 +381,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: GLASS_BORDER,
   },
-  orangeCard: { borderTopWidth: 3, borderTopColor: '#105E7A' },
+  purpleCard: { borderTopWidth: 3, borderTopColor: '#9C27B0' },
   greenCard: { borderTopWidth: 3, borderTopColor: '#00AA13' },
   blueCard: { borderTopWidth: 3, borderTopColor: '#1E88E5' },
   statNumber: { fontWeight: 'bold', marginTop: 8, color: '#FFFFFF' },
@@ -386,6 +399,18 @@ const styles = StyleSheet.create({
   glassCard: {
     marginHorizontal: 20,
     marginBottom: 24,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: GLASS_BG,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+  },
+  // Para el próximo evento (tappable)
+  eventCardWrapper: {
+    marginHorizontal: 20,
+    marginBottom: 24,
+  },
+  glassCardInner: {
     padding: 16,
     borderRadius: 16,
     backgroundColor: GLASS_BG,
@@ -410,7 +435,7 @@ const styles = StyleSheet.create({
   chipText: { color: 'rgba(255,255,255,0.85)', fontSize: 12 },
   eventTitle: { fontWeight: 'bold', marginBottom: 8, color: '#FFFFFF' },
   eventLocation: { color: 'rgba(255,255,255,0.5)', marginBottom: 12 },
-  eventFooter: { marginTop: 8 },
+  eventFooter: { marginTop: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   attendanceContainer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   attendanceText: { color: '#00AA13', fontWeight: '600' },
   noEventText: { color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' },

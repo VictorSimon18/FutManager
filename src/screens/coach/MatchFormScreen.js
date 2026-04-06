@@ -144,12 +144,12 @@ export default function MatchFormScreen({ route, navigation }) {
       } else {
         await createMatch(data);
       }
-      // Al editar volvemos a la pantalla anterior (MatchDetail); al crear,
-      // navegamos explícitamente a MatchList para evitar bucle con MapScreen.
+      // Al editar volvemos a la pantalla anterior (MatchDetail).
+      // Al crear, volvemos al MatchList ya existente en el stack (sin apilar uno nuevo).
       if (isEditing) {
         navigation.goBack();
       } else {
-        navigation.navigate('MatchList');
+        navigation.popTo('MatchList');
       }
     } catch (e) {
       Alert.alert('Error', 'No se pudo guardar el partido. Inténtalo de nuevo.');

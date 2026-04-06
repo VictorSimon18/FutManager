@@ -4,7 +4,7 @@ import { Text, TextInput, Button, SegmentedButtons, HelperText } from 'react-nat
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from '../../context/AuthContext';
-import { createPlayer, getPlayerById, updatePlayer } from '../../database/services/playerService';
+import { createPlayer, getPlayerById, updatePlayer, getPlayersByTeam } from '../../database/services/playerService';
 import { formatDate, parseDate } from '../../utils/dateUtils';
 
 const GLASS_BG = 'rgba(255,255,255,0.08)';
@@ -130,6 +130,19 @@ export default function PlayerFormScreen({ route, navigation }) {
     if (!validate()) return;
     setSaving(true);
     try {
+      // Validar dorsal único dentro del equipo
+      if (dorsal) {
+        const teammates = await getPlayersByTeam(equipoId);
+        const dorsalNum = parseInt(dorsal);
+        const duplicate = teammates.find(
+          p => p.dorsal === dorsalNum && (!isEditing || p.id !== playerId)
+        );
+        if (duplicate) {
+          setErrors(prev => ({ ...prev, dorsal: `El dorsal ${dorsalNum} ya lo lleva ${duplicate.nombre}.` }));
+          setSaving(false);
+          return;
+        }
+      }
       const data = {
         equipo_id: equipoId,
         nombre: nombre.trim(),
