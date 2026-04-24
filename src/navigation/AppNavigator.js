@@ -9,7 +9,6 @@ import { AuthContext } from '../context/AuthContext';
 import LoginScreen from '../screens/LoginScreen';
 import RoleSelectionScreen from '../screens/RoleSelectionScreen';
 import HomeCoachScreen from '../screens/HomeCoachScreen';
-import HomeFanScreen from '../screens/HomeFanScreen';
 
 // Pantallas del entrenador
 import PlayerListScreen from '../screens/coach/PlayerListScreen';
@@ -31,10 +30,18 @@ import PlayerStatsScreen from '../screens/player/PlayerStatsScreen';
 import PlayerTeamScreen from '../screens/player/PlayerTeamScreen';
 import PlayerProfileScreen from '../screens/player/PlayerProfileScreen';
 
+// Pantallas del aficionado (tab navigator)
+import FanDashboardScreen from '../screens/fan/FanDashboardScreen';
+import FanMatchesScreen from '../screens/fan/FanMatchesScreen';
+import FanSquadScreen from '../screens/fan/FanSquadScreen';
+import FanStandingsScreen from '../screens/fan/FanStandingsScreen';
+
 const Stack = createNativeStackNavigator();
 const PlayerTab = createBottomTabNavigator();
+const FanTab = createBottomTabNavigator();
 
 const PLAYER_COLOR = '#00AA13';
+const FAN_COLOR = '#1E88E5';
 
 /**
  * Bottom Tab Navigator para el rol jugador.
@@ -102,6 +109,67 @@ function PlayerTabNavigator() {
         }}
       />
     </PlayerTab.Navigator>
+  );
+}
+
+/**
+ * Bottom Tab Navigator para el rol aficionado.
+ * Cuatro tabs: Inicio, Partidos, Plantilla, Clasificación.
+ */
+function FanTabNavigator() {
+  return (
+    <FanTab.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: FAN_COLOR },
+        headerTintColor: '#fff',
+        headerTitleStyle: { fontWeight: 'bold' },
+        tabBarStyle: {
+          backgroundColor: '#0f2027',
+          borderTopColor: 'rgba(255,255,255,0.1)',
+          borderTopWidth: 1,
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 4,
+        },
+        tabBarActiveTintColor: FAN_COLOR,
+        tabBarInactiveTintColor: 'rgba(255,255,255,0.4)',
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+      }}
+    >
+      <FanTab.Screen
+        name="FanDashboard"
+        component={FanDashboardScreen}
+        options={{
+          title: 'Inicio',
+          tabBarIcon: ({ color, size }) => <Icon name="home" size={size} color={color} />,
+          headerRight: () => <LogoutButton />,
+        }}
+      />
+      <FanTab.Screen
+        name="FanMatches"
+        component={FanMatchesScreen}
+        options={{
+          title: 'Partidos',
+          tabBarIcon: ({ color, size }) => <Icon name="soccer" size={size} color={color} />,
+        }}
+      />
+      <FanTab.Screen
+        name="FanSquad"
+        component={FanSquadScreen}
+        options={{
+          title: 'Plantilla',
+          tabBarIcon: ({ color, size }) => <Icon name="account-group" size={size} color={color} />,
+        }}
+      />
+      <FanTab.Screen
+        name="FanStandings"
+        component={FanStandingsScreen}
+        options={{
+          title: 'Clasificación',
+          tabBarIcon: ({ color, size }) => <Icon name="trophy" size={size} color={color} />,
+        }}
+      />
+    </FanTab.Navigator>
   );
 }
 
@@ -267,16 +335,11 @@ export default function AppNavigator() {
             options={{ headerShown: false, headerBackVisible: false }}
           />
         ) : (
-          // ── Rol aficionado ───────────────────────────────────────────────────
+          // ── Rol aficionado (Bottom Tabs) ─────────────────────────────────────
           <Stack.Screen
-            name="HomeFan"
-            component={HomeFanScreen}
-            options={{
-              title: 'Mi Equipo',
-              headerStyle: { backgroundColor: '#1E88E5' },
-              headerBackVisible: false,
-              headerRight: () => <LogoutButton />,
-            }}
+            name="FanTabs"
+            component={FanTabNavigator}
+            options={{ headerShown: false, headerBackVisible: false }}
           />
         )}
       </Stack.Navigator>
