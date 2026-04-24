@@ -2,13 +2,13 @@ import React, { useContext } from 'react';
 import { View, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 
 import { AuthContext } from '../context/AuthContext';
 import LoginScreen from '../screens/LoginScreen';
 import RoleSelectionScreen from '../screens/RoleSelectionScreen';
 import HomeCoachScreen from '../screens/HomeCoachScreen';
-import HomePlayerScreen from '../screens/HomePlayerScreen';
 import HomeFanScreen from '../screens/HomeFanScreen';
 
 // Pantallas del entrenador
@@ -24,7 +24,86 @@ import TrainingDetailScreen from '../screens/coach/TrainingDetailScreen';
 import MapScreen from '../screens/coach/MapScreen';
 import TacticalBoardScreen from '../screens/coach/TacticalBoardScreen';
 
+// Pantallas del jugador (tab navigator)
+import PlayerDashboardScreen from '../screens/player/PlayerDashboardScreen';
+import PlayerCalendarScreen from '../screens/player/PlayerCalendarScreen';
+import PlayerStatsScreen from '../screens/player/PlayerStatsScreen';
+import PlayerTeamScreen from '../screens/player/PlayerTeamScreen';
+import PlayerProfileScreen from '../screens/player/PlayerProfileScreen';
+
 const Stack = createNativeStackNavigator();
+const PlayerTab = createBottomTabNavigator();
+
+const PLAYER_COLOR = '#00AA13';
+
+/**
+ * Bottom Tab Navigator para el rol jugador.
+ * Cinco tabs: Inicio, Calendario, Estadísticas, Mi Equipo, Mi Perfil.
+ */
+function PlayerTabNavigator() {
+  return (
+    <PlayerTab.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: PLAYER_COLOR },
+        headerTintColor: '#fff',
+        headerTitleStyle: { fontWeight: 'bold' },
+        tabBarStyle: {
+          backgroundColor: '#0f2027',
+          borderTopColor: 'rgba(255,255,255,0.1)',
+          borderTopWidth: 1,
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 4,
+        },
+        tabBarActiveTintColor: PLAYER_COLOR,
+        tabBarInactiveTintColor: 'rgba(255,255,255,0.4)',
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+      }}
+    >
+      <PlayerTab.Screen
+        name="PlayerDashboard"
+        component={PlayerDashboardScreen}
+        options={{
+          title: 'Inicio',
+          tabBarIcon: ({ color, size }) => <Icon name="home" size={size} color={color} />,
+          headerRight: () => <LogoutButton />,
+        }}
+      />
+      <PlayerTab.Screen
+        name="PlayerCalendar"
+        component={PlayerCalendarScreen}
+        options={{
+          title: 'Calendario',
+          tabBarIcon: ({ color, size }) => <Icon name="calendar" size={size} color={color} />,
+        }}
+      />
+      <PlayerTab.Screen
+        name="PlayerStats"
+        component={PlayerStatsScreen}
+        options={{
+          title: 'Estadísticas',
+          tabBarIcon: ({ color, size }) => <Icon name="chart-bar" size={size} color={color} />,
+        }}
+      />
+      <PlayerTab.Screen
+        name="PlayerTeam"
+        component={PlayerTeamScreen}
+        options={{
+          title: 'Mi Equipo',
+          tabBarIcon: ({ color, size }) => <Icon name="account-group" size={size} color={color} />,
+        }}
+      />
+      <PlayerTab.Screen
+        name="PlayerProfile"
+        component={PlayerProfileScreen}
+        options={{
+          title: 'Mi Perfil',
+          tabBarIcon: ({ color, size }) => <Icon name="account" size={size} color={color} />,
+        }}
+      />
+    </PlayerTab.Navigator>
+  );
+}
 
 const COACH_COLOR = '#105E7A';
 
@@ -181,16 +260,11 @@ export default function AppNavigator() {
             />
           </>
         ) : role === 'player' ? (
-          // ── Rol jugador ──────────────────────────────────────────────────────
+          // ── Rol jugador (Bottom Tabs) ────────────────────────────────────────
           <Stack.Screen
-            name="HomePlayer"
-            component={HomePlayerScreen}
-            options={{
-              title: 'Mi Perfil',
-              headerStyle: { backgroundColor: '#00AA13' },
-              headerBackVisible: false,
-              headerRight: () => <LogoutButton />,
-            }}
+            name="PlayerTabs"
+            component={PlayerTabNavigator}
+            options={{ headerShown: false, headerBackVisible: false }}
           />
         ) : (
           // ── Rol aficionado ───────────────────────────────────────────────────
