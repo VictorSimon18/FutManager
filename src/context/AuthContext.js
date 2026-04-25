@@ -213,6 +213,24 @@ export function AuthProvider({ children }) {
   }
 
   /**
+   * Limpia el rol activo (manteniendo la sesión del usuario) para volver a
+   * la pantalla de selección de rol. Útil para cambiar de rol sin cerrar sesión.
+   */
+  async function changeRole() {
+    try {
+      if (user) {
+        await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify({ userId: user.id }));
+      }
+    } catch (error) {
+      console.error('[AuthContext] Error al cambiar rol:', error);
+    } finally {
+      setRole(null);
+      setEquipoId(null);
+      setRoleData(null);
+    }
+  }
+
+  /**
    * Cierra la sesión del usuario, limpiando el estado y el almacenamiento persistente.
    */
   async function logout() {
@@ -240,6 +258,7 @@ export function AuthProvider({ children }) {
         login,
         register,
         selectRole,
+        changeRole,
         logout,
       }}
     >

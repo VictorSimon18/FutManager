@@ -73,7 +73,7 @@ function PlayerTabNavigator() {
         options={{
           title: 'Inicio',
           tabBarIcon: ({ color, size }) => <Icon name="home" size={size} color={color} />,
-          headerRight: () => <LogoutButton />,
+          headerRight: () => <HeaderButtons />,
         }}
       />
       <PlayerTab.Screen
@@ -142,7 +142,7 @@ function FanTabNavigator() {
         options={{
           title: 'Inicio',
           tabBarIcon: ({ color, size }) => <Icon name="home" size={size} color={color} />,
-          headerRight: () => <LogoutButton />,
+          headerRight: () => <HeaderButtons />,
         }}
       />
       <FanTab.Screen
@@ -185,6 +185,31 @@ function LogoutButton() {
     <TouchableOpacity onPress={logout} style={{ marginRight: 4, padding: 4 }}>
       <Icon name="logout" size={24} color="#fff" />
     </TouchableOpacity>
+  );
+}
+
+/**
+ * Botón para cambiar de rol manteniendo la sesión iniciada.
+ */
+function ChangeRoleButton() {
+  const { changeRole } = useContext(AuthContext);
+  return (
+    <TouchableOpacity onPress={changeRole} style={{ marginRight: 4, padding: 4 }}>
+      <Icon name="account-switch" size={24} color="#fff" />
+    </TouchableOpacity>
+  );
+}
+
+/**
+ * Conjunto de botones del header (cambiar rol + cerrar sesión) para las
+ * pantallas principales de cada rol.
+ */
+function HeaderButtons() {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+      <ChangeRoleButton />
+      <LogoutButton />
+    </View>
   );
 }
 
@@ -244,7 +269,7 @@ export default function AppNavigator() {
                 title: 'Panel de Entrenador',
                 ...coachHeaderOptions,
                 headerBackVisible: false,
-                headerRight: () => <LogoutButton />,
+                headerRight: () => <HeaderButtons />,
               }}
             />
             {/* Jugadores */}
