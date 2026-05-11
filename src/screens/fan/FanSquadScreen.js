@@ -1,7 +1,3 @@
-/**
- * FanSquadScreen.js — Plantilla del equipo (solo lectura) para el rol aficionado.
- */
-
 import React, { useContext, useCallback } from 'react';
 import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { Text, Avatar } from 'react-native-paper';
@@ -71,11 +67,19 @@ export default function FanSquadScreen() {
         end={{ x: 0.4, y: 1 }}
       />
 
+      {/* Header */}
       <View style={styles.header}>
-        <Icon name="account-group" size={22} color={FAN_ACCENT} />
-        <Text style={styles.headerText}>
-          PLANTILLA {loading ? '' : `(${players.length})`}
-        </Text>
+        <View style={styles.headerContent}>
+          <View>
+            <Text variant="headlineSmall" style={styles.welcomeText}>
+              Plantilla{loading ? '' : ` (${players.length})`}
+            </Text>
+            <Text variant="bodyMedium" style={styles.headerSubtext}>
+              Jugadores del equipo
+            </Text>
+          </View>
+          <Avatar.Icon size={56} icon="account-group" style={styles.avatar} />
+        </View>
       </View>
 
       {loading ? (
@@ -107,20 +111,18 @@ const styles = StyleSheet.create({
   loader: { marginTop: 40 },
 
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: GLASS_BORDER,
   },
-  headerText: {
-    color: FAN_ACCENT,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
-  },
+  headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  welcomeText: { fontWeight: 'bold', color: '#FFFFFF' },
+  headerSubtext: { color: 'rgba(255,255,255,0.5)', marginTop: 4 },
+  avatar: { backgroundColor: FAN_ACCENT },
 
-  listContent: { padding: 16, paddingTop: 8, paddingBottom: 40 },
+  listContent: { padding: 16, paddingBottom: 40 },
 
   playerCard: {
     flexDirection: 'row',

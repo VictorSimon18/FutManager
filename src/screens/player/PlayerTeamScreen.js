@@ -1,7 +1,3 @@
-/**
- * PlayerTeamScreen.js — Pantalla "Mi Equipo": info del equipo, plantilla y clasificación.
- */
-
 import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Text, Avatar, Chip } from 'react-native-paper';
@@ -52,44 +48,29 @@ export default function PlayerTeamScreen() {
         end={{ x: 0.4, y: 1 }}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header del equipo */}
-        <View style={styles.teamHeader}>
-          <Avatar.Icon
-            size={64}
-            icon="shield-star"
-            style={{ backgroundColor: PLAYER_ACCENT }}
-            color="#FFFFFF"
-          />
-          <View style={styles.teamInfo}>
-            <Text variant="titleLarge" style={styles.teamName} numberOfLines={2}>
-              {team?.nombre || 'Mi equipo'}
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerTextWrap}>
+            <Text variant="headlineSmall" style={styles.welcomeText} numberOfLines={1}>
+              {team?.nombre || 'Mi Equipo'}
             </Text>
-            <View style={styles.teamMeta}>
-              {team?.categoria ? (
-                <Chip compact style={styles.teamChip} textStyle={styles.chipText}>
-                  {team.categoria}
-                </Chip>
-              ) : null}
-              {team?.modalidad ? (
-                <Chip compact style={styles.teamChip} textStyle={styles.chipText}>
-                  {team.modalidad}
-                </Chip>
-              ) : null}
-            </View>
-            {team?.temporada ? (
-              <Text style={styles.teamSeason}>Temporada {team.temporada}</Text>
-            ) : null}
+            <Text variant="bodyMedium" style={styles.headerSubtext}>
+              {team?.categoria ? `${team.categoria}${team.temporada ? ' · ' + team.temporada : ''}` : 'Plantilla y clasificación'}
+            </Text>
           </View>
+          <Avatar.Icon size={56} icon="account-group" style={styles.avatar} />
         </View>
+      </View>
 
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         {isLoading ? (
           <ActivityIndicator size="large" color={PLAYER_ACCENT} style={styles.loader} />
         ) : (
           <>
             {/* Plantilla */}
-            <Text variant="titleMedium" style={styles.sectionTitle}>
-              PLANTILLA ({players.length})
+            <Text variant="titleLarge" style={styles.sectionTitle}>
+              Plantilla ({players.length})
             </Text>
             <View style={styles.listCard}>
               {players.map((p, i) => {
@@ -143,14 +124,14 @@ export default function PlayerTeamScreen() {
             {/* Clasificación */}
             {tournamentData && tournamentData.standings.length > 0 ? (
               <>
-                <Text variant="titleMedium" style={styles.sectionTitle}>
-                  CLASIFICACIÓN
+                <Text variant="titleLarge" style={styles.sectionTitle}>
+                  Clasificación
                 </Text>
                 <Text style={styles.tournamentName}>{tournamentData.torneo?.nombre}</Text>
                 <View style={styles.listCard}>
                   <View style={styles.tableHeader}>
-                    <Text style={[styles.thPos]}>#</Text>
-                    <Text style={[styles.thTeam]}>Equipo</Text>
+                    <Text style={styles.thPos}>#</Text>
+                    <Text style={styles.thTeam}>Equipo</Text>
                     <Text style={styles.thCell}>PJ</Text>
                     <Text style={styles.thCell}>PG</Text>
                     <Text style={styles.thCell}>PE</Text>
@@ -204,34 +185,25 @@ const styles = StyleSheet.create({
   scrollContent: { paddingBottom: 40 },
   loader: { marginTop: 40 },
 
-  teamHeader: {
-    margin: 16,
-    marginBottom: 8,
-    padding: 16,
-    borderRadius: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    backgroundColor: GLASS_BG,
-    borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    borderTopWidth: 3,
-    borderTopColor: PLAYER_ACCENT,
+  header: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: GLASS_BORDER,
   },
-  teamInfo: { flex: 1, gap: 6 },
-  teamName: { color: '#FFFFFF', fontWeight: 'bold' },
-  teamMeta: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
-  teamChip: { backgroundColor: 'rgba(255,255,255,0.1)', height: 24 },
-  chipText: { color: 'rgba(255,255,255,0.8)', fontSize: 11 },
-  teamSeason: { color: 'rgba(255,255,255,0.5)', fontSize: 12 },
+  headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  headerTextWrap: { flex: 1, marginRight: 12 },
+  welcomeText: { fontWeight: 'bold', color: '#FFFFFF' },
+  headerSubtext: { color: 'rgba(255,255,255,0.5)', marginTop: 4 },
+  avatar: { backgroundColor: PLAYER_ACCENT },
 
   sectionTitle: {
-    color: PLAYER_ACCENT,
     fontWeight: 'bold',
     paddingHorizontal: 20,
     marginTop: 16,
-    marginBottom: 10,
-    letterSpacing: 0.5,
+    marginBottom: 12,
+    color: '#FFFFFF',
   },
 
   listCard: {

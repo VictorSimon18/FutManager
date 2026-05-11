@@ -1,7 +1,3 @@
-/**
- * FanStandingsScreen.js — Clasificación del torneo y máximos goleadores/asistentes.
- */
-
 import React, { useContext, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Text, Avatar } from 'react-native-paper';
@@ -47,6 +43,21 @@ export default function FanStandingsScreen() {
         end={{ x: 0.4, y: 1 }}
       />
 
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <View>
+            <Text variant="headlineSmall" style={styles.welcomeText}>
+              Clasificación
+            </Text>
+            <Text variant="bodyMedium" style={styles.headerSubtext}>
+              Torneo y estadísticas
+            </Text>
+          </View>
+          <Avatar.Icon size={56} icon="trophy" style={styles.avatar} />
+        </View>
+      </View>
+
       {isLoading ? (
         <ActivityIndicator size="large" color={FAN_ACCENT} style={styles.loader} />
       ) : (
@@ -54,7 +65,7 @@ export default function FanStandingsScreen() {
           {/* Clasificación del torneo */}
           {tournamentData && tournamentData.standings.length > 0 ? (
             <>
-              <Text variant="titleMedium" style={styles.sectionTitle}>CLASIFICACIÓN</Text>
+              <Text variant="titleLarge" style={styles.sectionTitle}>Clasificación</Text>
               <Text style={styles.tournamentName}>
                 {tournamentData.torneo?.nombre}
               </Text>
@@ -101,7 +112,7 @@ export default function FanStandingsScreen() {
           ) : null}
 
           {/* Máximos goleadores */}
-          <Text variant="titleMedium" style={styles.sectionTitle}>MÁXIMOS GOLEADORES</Text>
+          <Text variant="titleLarge" style={styles.sectionTitle}>Máximos goleadores</Text>
           <View style={styles.listCard}>
             {scorers.length === 0 ? (
               <Text style={styles.emptyText}>Aún no hay goles registrados</Text>
@@ -149,7 +160,7 @@ export default function FanStandingsScreen() {
           {/* Máximos asistentes */}
           {assisters.length > 0 ? (
             <>
-              <Text variant="titleMedium" style={styles.sectionTitle}>MÁXIMOS ASISTENTES</Text>
+              <Text variant="titleLarge" style={styles.sectionTitle}>Máximos asistentes</Text>
               <View style={styles.listCard}>
                 {assisters.map((p, idx) => {
                   const positionColor = getPositionColor(p.posicion);
@@ -177,10 +188,10 @@ export default function FanStandingsScreen() {
                           ) : null}
                         </View>
                         <View style={styles.goalsWrap}>
-                          <Text style={[styles.goalsNum, { color: '#1E88E5' }]}>
+                          <Text style={[styles.goalsNum, { color: FAN_ACCENT }]}>
                             {p.total_asistencias}
                           </Text>
-                          <Icon name="shoe-cleat" size={18} color="#1E88E5" />
+                          <Icon name="shoe-cleat" size={18} color={FAN_ACCENT} />
                         </View>
                       </View>
                     </View>
@@ -213,13 +224,24 @@ const styles = StyleSheet.create({
   scrollContent: { paddingBottom: 40 },
   loader: { marginTop: 60 },
 
+  header: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: GLASS_BORDER,
+  },
+  headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  welcomeText: { fontWeight: 'bold', color: '#FFFFFF' },
+  headerSubtext: { color: 'rgba(255,255,255,0.5)', marginTop: 4 },
+  avatar: { backgroundColor: FAN_ACCENT },
+
   sectionTitle: {
-    color: FAN_ACCENT,
     fontWeight: 'bold',
     paddingHorizontal: 20,
     marginTop: 16,
     marginBottom: 8,
-    letterSpacing: 0.5,
+    color: '#FFFFFF',
   },
   tournamentName: {
     color: 'rgba(255,255,255,0.7)',

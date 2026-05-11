@@ -1,10 +1,6 @@
-/**
- * PlayerStatsScreen.js — Estadísticas del jugador: resumen de temporada e historial por partido.
- */
-
 import React, { useContext, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { Text } from 'react-native-paper';
+import { Text, Avatar } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
@@ -51,11 +47,26 @@ export default function PlayerStatsScreen() {
         end={{ x: 0.4, y: 1 }}
       />
 
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <View>
+            <Text variant="headlineSmall" style={styles.welcomeText}>
+              Estadísticas
+            </Text>
+            <Text variant="bodyMedium" style={styles.headerSubtext}>
+              Mi temporada
+            </Text>
+          </View>
+          <Avatar.Icon size={56} icon="chart-bar" style={styles.avatar} />
+        </View>
+      </View>
+
       {loading ? (
         <ActivityIndicator size="large" color={PLAYER_ACCENT} style={styles.loader} />
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <Text variant="titleMedium" style={styles.sectionTitle}>RESUMEN DE TEMPORADA</Text>
+          <Text variant="titleLarge" style={styles.sectionTitle}>Resumen de temporada</Text>
 
           {partidosJugados === 0 ? (
             <View style={styles.emptyCard}>
@@ -98,7 +109,7 @@ export default function PlayerStatsScreen() {
             </View>
           )}
 
-          <Text variant="titleMedium" style={styles.sectionTitle}>HISTORIAL POR PARTIDO</Text>
+          <Text variant="titleLarge" style={styles.sectionTitle}>Historial por partido</Text>
 
           {stats.length === 0 ? (
             <View style={styles.emptyCard}>
@@ -181,13 +192,24 @@ const styles = StyleSheet.create({
   scrollContent: { paddingBottom: 40 },
   loader: { marginTop: 60 },
 
+  header: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: GLASS_BORDER,
+  },
+  headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  welcomeText: { fontWeight: 'bold', color: '#FFFFFF' },
+  headerSubtext: { color: 'rgba(255,255,255,0.5)', marginTop: 4 },
+  avatar: { backgroundColor: PLAYER_ACCENT },
+
   sectionTitle: {
-    color: PLAYER_ACCENT,
     fontWeight: 'bold',
     paddingHorizontal: 20,
     marginTop: 16,
-    marginBottom: 10,
-    letterSpacing: 0.5,
+    marginBottom: 12,
+    color: '#FFFFFF',
   },
 
   glassCard: {
