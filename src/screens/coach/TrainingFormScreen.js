@@ -5,6 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from '../../context/AuthContext';
 import { createTraining, getTrainingById, updateTraining } from '../../database/services/trainingService';
 import { formatDate, formatTime, parseDate, parseTime } from '../../utils/dateUtils';
+import { EventBus, EVENTS } from '../../utils/eventBus';
+import { sendLocalNotification } from '../../utils/notifications';
 
 // Foco blanco + texto escrito en blanco
 const INPUT_THEME = {
@@ -99,6 +101,11 @@ export default function TrainingFormScreen({ route, navigation }) {
       } else {
         await createTraining(data);
       }
+      EventBus.emit(EVENTS.TRAINING_CREATED, { tipo, fecha: fecha.trim() });
+      sendLocalNotification(
+        isEditing ? '🏃 Entrenamiento actualizado' : '🏃 Nuevo entrenamiento programado',
+        `${tipo}: el ${fecha.trim()}`
+      );
       navigation.goBack();
     } catch (e) {
       Alert.alert('Error', 'No se pudo guardar el entrenamiento. Inténtalo de nuevo.');

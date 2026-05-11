@@ -6,6 +6,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from '../../context/AuthContext';
 import { createMatch, getMatchById, updateMatch } from '../../database/services/matchService';
 import { formatDate, formatTime, parseDate, parseTime } from '../../utils/dateUtils';
+import { EventBus, EVENTS } from '../../utils/eventBus';
+import { sendLocalNotification } from '../../utils/notifications';
 
 // Foco blanco + texto escrito en blanco
 const INPUT_THEME = {
@@ -144,8 +146,11 @@ export default function MatchFormScreen({ route, navigation }) {
       } else {
         await createMatch(data);
       }
-      // Al editar volvemos a la pantalla anterior (MatchDetail).
-      // Al crear, volvemos al MatchList ya existente en el stack (sin apilar uno nuevo).
+      EventBus.emit(EVENTS.MATCH_CREATED, { rival: rival.trim(), fecha: fecha.trim() });
+      sendLocalNotification(
+        isEditing ? '📅 Partido actualizado' : '📅 Nuevo partido programado',
+        `${isEditing ? 'Editado' : 'Añadido'}: vs. ${rival.trim()} el ${fecha.trim()}`
+      );
       if (isEditing) {
         navigation.goBack();
       } else {
