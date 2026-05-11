@@ -1,10 +1,5 @@
-/**
- * FanDashboardScreen.js — Pantalla "Inicio" del rol aficionado.
- * Muestra info del equipo, estadísticas de temporada, próximo partido y últimos resultados.
- */
-
 import React, { useContext, useState, useEffect, useMemo, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Text, Avatar, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,14 +11,14 @@ import { useTeamStats } from '../../hooks/useTeamStats';
 import { getTeamById } from '../../database/services/teamService';
 import { formatDate, formatTime } from '../../utils/dateUtils';
 
-function resultInfo(gf, gc) {
-  if (gf > gc) return { letra: 'V', color: '#43A047' };
-  if (gf < gc) return { letra: 'D', color: '#E53935' };
-  return { letra: 'E', color: 'rgba(255,255,255,0.35)' };
+function rachaLabel(tipo, cantidad) {
+  if (!tipo || cantidad === 0) return null;
+  const nombre = tipo === 'V' ? 'victorias' : tipo === 'D' ? 'derrotas' : 'empates';
+  return `${cantidad} ${nombre} consecutivas`;
 }
 
-export default function FanDashboardScreen() {
-  const { equipoId } = useContext(AuthContext);
+export default function FanDashboardScreen({ navigation }) {
+  const { user, equipoId } = useContext(AuthContext);
 
   const [team, setTeam] = useState(null);
   const { matches, upcomingMatches, loading: loadingMatches, refresh: refreshMatches } = useMatches(equipoId);
@@ -41,11 +36,6 @@ export default function FanDashboardScreen() {
   );
 
   const isLoading = loadingMatches || loadingTeamStats;
-
-  const ultimosResultados = useMemo(
-    () => matches.filter((m) => m.estado === 'finalizado').slice(0, 3),
-    [matches]
-  );
   const proximoPartido = upcomingMatches[0] ?? null;
 
   return (
@@ -58,33 +48,18 @@ export default function FanDashboardScreen() {
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header del equipo */}
-        <View style={styles.teamHeader}>
-          <Avatar.Icon
-            size={72}
-            icon="shield-star"
-            style={{ backgroundColor: FAN_ACCENT }}
-            color="#FFFFFF"
-          />
-          <View style={styles.teamInfo}>
-            <Text variant="titleLarge" style={styles.teamName} numberOfLines={2}>
-              {team?.nombre || 'Mi equipo'}
-            </Text>
-            <View style={styles.teamMeta}>
-              {team?.categoria ? (
-                <Chip compact style={styles.teamChip} textStyle={styles.chipText}>
-                  {team.categoria}
-                </Chip>
-              ) : null}
-              {team?.modalidad ? (
-                <Chip compact style={styles.teamChip} textStyle={styles.chipText}>
-                  {team.modalidad}
-                </Chip>
-              ) : null}
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <View>
+              <Text variant="headlineSmall" style={styles.welcomeText}>
+                Bienvenido, {user?.nombre?.split(' ')[0] || 'Aficionado'}
+              </Text>
+              <Text variant="bodyMedium" style={styles.headerSubtext}>
+                Sigue a tu equipo
+              </Text>
             </View>
-            {team?.temporada ? (
-              <Text style={styles.teamSeason}>Temporada {team.temporada}</Text>
-            ) : null}
+            <Avatar.Icon size={56} icon="shield-star" style={styles.avatar} />
           </View>
         </View>
 
@@ -92,153 +67,222 @@ export default function FanDashboardScreen() {
           <ActivityIndicator size="large" color={FAN_ACCENT} style={styles.loader} />
         ) : (
           <>
-            {/* Estadísticas de temporada */}
-            {teamStats && teamStats.partidos_jugados > 0 ? (
+            {/* Stats Cards */}
+            <View style={styles.statsContainer}>
+              <View style={[styles.statCard, styles.blueCard]}>
+                <Icon name="trophy" size={32} color={FAN_ACCENT} />
+                <Text variant="headlineMedium" style={styles.statNumber}>
+                  {matches.length}
+                </Text>
+                <Text variant="bodySmall" style={styles.statLabel}>Partidos</Text>
+              </View>
+
+              <View style={[styles.statCard, styles.greenCard]}>
+                <Icon name="check-circle" size={32} color="#43A047" />
+                <Text variant="headlineMedium" style={styles.statNumber}>
+                  {teamStats?.ganados ?? 0}
+                </Text>
+                <Text variant="bodySmall" style={styles.statLabel}>Victorias</Text>
+              </View>
+
+              <View style={[styles.statCard, styles.redCard]}>
+                <Icon name="close-circle" size={32} color="#E53935" />
+                <Text variant="headlineMedium" style={styles.statNumber}>
+                  {teamStats?.perdidos ?? 0}
+                </Text>
+                <Text variant="bodySmall" style={styles.statLabel}>Derrotas</Text>
+              </View>
+            </View>
+
+            {/* Rendimiento del equipo */}
+            {teamStats && teamStats.partidos_jugados > 0 && (
               <>
-                <Text variant="titleMedium" style={styles.sectionTitle}>TEMPORADA</Text>
+                <Text variant="titleLarge" style={styles.sectionTitle}>
+                  Rendimiento del equipo
+                </Text>
                 <View style={styles.glassCard}>
-                  <View style={styles.statsRow}>
-                    <View style={styles.statItem}>
-                      <Text style={[styles.statNum, { color: '#FFFFFF' }]}>
+                  <View style={styles.teamStatsRow}>
+                    <View style={styles.teamStatItem}>
+                      <Text variant="headlineMedium" style={[styles.teamStatNum, { color: '#FFFFFF' }]}>
                         {teamStats.partidos_jugados}
                       </Text>
-                      <Text style={styles.statLabel}>Jugados</Text>
+                      <Text variant="bodySmall" style={styles.teamStatLabel}>Jugados</Text>
                     </View>
-                    <View style={styles.statItem}>
-                      <Text style={[styles.statNum, { color: '#43A047' }]}>
+                    <View style={styles.teamStatItem}>
+                      <Text variant="headlineMedium" style={[styles.teamStatNum, { color: '#43A047' }]}>
                         {teamStats.ganados}
                       </Text>
-                      <Text style={styles.statLabel}>Victorias</Text>
+                      <Text variant="bodySmall" style={styles.teamStatLabel}>Victorias</Text>
                     </View>
-                    <View style={styles.statItem}>
-                      <Text style={[styles.statNum, { color: '#FFC107' }]}>
+                    <View style={styles.teamStatItem}>
+                      <Text variant="headlineMedium" style={[styles.teamStatNum, { color: FAN_ACCENT }]}>
                         {teamStats.empatados}
                       </Text>
-                      <Text style={styles.statLabel}>Empates</Text>
+                      <Text variant="bodySmall" style={styles.teamStatLabel}>Empates</Text>
                     </View>
-                    <View style={styles.statItem}>
-                      <Text style={[styles.statNum, { color: '#E53935' }]}>
+                    <View style={styles.teamStatItem}>
+                      <Text variant="headlineMedium" style={[styles.teamStatNum, { color: '#E53935' }]}>
                         {teamStats.perdidos}
                       </Text>
-                      <Text style={styles.statLabel}>Derrotas</Text>
+                      <Text variant="bodySmall" style={styles.teamStatLabel}>Derrotas</Text>
                     </View>
                   </View>
-                  <View style={styles.divider} />
-                  <View style={styles.statsRow}>
-                    <View style={styles.statItem}>
-                      <Text style={[styles.statNumSmall, { color: '#FFFFFF' }]}>
+
+                  <View style={styles.teamStatsDivider} />
+
+                  <View style={styles.teamStatsRow}>
+                    <View style={styles.teamStatItem}>
+                      <Text variant="titleLarge" style={[styles.teamStatNum, { color: '#FFFFFF' }]}>
                         {teamStats.goles_favor}
                       </Text>
-                      <Text style={styles.statLabel}>Goles a favor</Text>
+                      <Text variant="bodySmall" style={styles.teamStatLabel}>Goles a favor</Text>
                     </View>
-                    <View style={styles.statItem}>
-                      <Text style={[styles.statNumSmall, { color: '#D94865' }]}>
+                    <View style={styles.teamStatItem}>
+                      <Text variant="titleLarge" style={[styles.teamStatNum, { color: '#D94865' }]}>
                         {teamStats.goles_contra}
                       </Text>
-                      <Text style={styles.statLabel}>En contra</Text>
+                      <Text variant="bodySmall" style={styles.teamStatLabel}>Goles en contra</Text>
                     </View>
-                    <View style={styles.statItem}>
-                      <Text style={[styles.statNumSmall, { color: '#43A047' }]}>
+                    <View style={styles.teamStatItem}>
+                      <Text variant="titleLarge" style={[styles.teamStatNum, { color: '#43A047' }]}>
                         {teamStats.porcentaje_victorias}%
                       </Text>
-                      <Text style={styles.statLabel}>Victorias</Text>
+                      <Text variant="bodySmall" style={styles.teamStatLabel}>% Victorias</Text>
                     </View>
                   </View>
+
+                  {(teamStats.racha > 1 || teamStats.top_goleador) && (
+                    <View style={styles.teamExtras}>
+                      {teamStats.racha > 1 && (
+                        <View style={styles.teamExtraRow}>
+                          <Icon name="fire" size={16} color={FAN_ACCENT} />
+                          <Text variant="bodySmall" style={styles.teamExtraText}>
+                            Racha: {rachaLabel(teamStats.racha_tipo, teamStats.racha)}
+                          </Text>
+                        </View>
+                      )}
+                      {teamStats.top_goleador && teamStats.top_goleador_goles > 0 && (
+                        <View style={styles.teamExtraRow}>
+                          <Icon name="soccer" size={16} color="#43A047" />
+                          <Text variant="bodySmall" style={styles.teamExtraText}>
+                            Máximo goleador: {teamStats.top_goleador} ({teamStats.top_goleador_goles} goles)
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
                 </View>
               </>
-            ) : null}
+            )}
 
             {/* Próximo partido */}
-            <Text variant="titleMedium" style={styles.sectionTitle}>PRÓXIMO PARTIDO</Text>
+            <Text variant="titleLarge" style={styles.sectionTitle}>
+              Próximo partido
+            </Text>
             {proximoPartido ? (
-              <View style={styles.glassCard}>
-                <View style={styles.matchHeader}>
-                  <Chip icon="calendar" style={styles.dateChip} textStyle={styles.chipText}>
-                    {formatDate(proximoPartido.fecha)}{proximoPartido.hora ? `, ${formatTime(proximoPartido.hora)}` : ''}
-                  </Chip>
-                  <Chip
-                    icon={proximoPartido.es_local ? 'home' : 'airplane'}
-                    mode="outlined"
-                    style={styles.outlinedChip}
-                    textStyle={styles.chipText}
-                  >
-                    {proximoPartido.es_local ? 'Local' : 'Visitante'}
-                  </Chip>
-                </View>
-
-                <View style={styles.matchup}>
-                  <View style={styles.matchTeam}>
-                    <Avatar.Icon
-                      size={48}
-                      icon="shield-star"
-                      style={{ backgroundColor: FAN_ACCENT }}
-                      color="#FFFFFF"
-                    />
-                    <Text style={styles.matchTeamName} numberOfLines={2}>
-                      {team?.nombre || 'Nosotros'}
-                    </Text>
+              <TouchableOpacity
+                style={styles.eventCardWrapper}
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate('FanMatches')}
+              >
+                <View style={styles.glassCardInner}>
+                  <View style={styles.eventHeader}>
+                    <Chip icon="calendar" style={styles.eventChip} textStyle={styles.chipText}>
+                      {formatDate(proximoPartido.fecha)}{proximoPartido.hora ? `, ${formatTime(proximoPartido.hora)}` : ''}
+                    </Chip>
+                    <Chip
+                      icon={proximoPartido.es_local ? 'home' : 'airplane'}
+                      mode="outlined"
+                      style={styles.eventChipOutlined}
+                      textStyle={styles.chipText}
+                    >
+                      {proximoPartido.es_local ? 'Local' : 'Visitante'}
+                    </Chip>
                   </View>
-                  <Text style={styles.vsText}>VS</Text>
-                  <View style={styles.matchTeam}>
-                    <Avatar.Icon
-                      size={48}
-                      icon="shield"
-                      style={{ backgroundColor: '#D32F2F' }}
-                      color="#FFFFFF"
-                    />
-                    <Text style={styles.matchTeamName} numberOfLines={2}>
-                      {proximoPartido.rival}
-                    </Text>
-                  </View>
-                </View>
-
-                {proximoPartido.ubicacion ? (
-                  <View style={styles.locationRow}>
-                    <Icon name="map-marker" size={16} color="rgba(255,255,255,0.5)" />
-                    <Text style={styles.locationText} numberOfLines={1}>
+                  <Text variant="titleLarge" style={styles.eventTitle} numberOfLines={2}>
+                    {team?.nombre || 'Nosotros'} vs. {proximoPartido.rival}
+                  </Text>
+                  {proximoPartido.ubicacion ? (
+                    <Text variant="bodyMedium" style={styles.eventLocation} numberOfLines={1} ellipsizeMode="tail">
                       {proximoPartido.ubicacion}
                     </Text>
+                  ) : null}
+                  <View style={styles.eventFooter}>
+                    <View style={styles.attendanceContainer}>
+                      <Icon name="soccer" size={20} color={FAN_ACCENT} />
+                      <Text variant="bodyMedium" style={styles.attendanceText}>
+                        Ver todos los partidos
+                      </Text>
+                    </View>
+                    <Icon name="chevron-right" size={20} color="rgba(255,255,255,0.3)" />
                   </View>
-                ) : null}
-              </View>
+                </View>
+              </TouchableOpacity>
             ) : (
               <View style={styles.glassCard}>
-                <Text style={styles.noDataText}>No hay partidos próximos programados</Text>
+                <Text variant="bodyMedium" style={styles.noEventText}>
+                  No hay partidos próximos programados
+                </Text>
               </View>
             )}
 
-            {/* Últimos resultados */}
-            <Text variant="titleMedium" style={styles.sectionTitle}>ÚLTIMOS RESULTADOS</Text>
-            {ultimosResultados.length > 0 ? (
-              <View style={styles.glassCard}>
-                {ultimosResultados.map((m, i) => {
-                  const { letra, color } = resultInfo(m.goles_favor, m.goles_contra);
-                  return (
-                    <View key={m.id}>
-                      {i > 0 && <View style={styles.divider} />}
-                      <View style={styles.resultRow}>
-                        <View style={[styles.resultBadge, { backgroundColor: `${color}33`, borderColor: color }]}>
-                          <Text style={[styles.resultLetter, { color }]}>{letra}</Text>
-                        </View>
-                        <View style={styles.resultInfo}>
-                          <Text style={styles.resultRival} numberOfLines={1}>
-                            {m.es_local ? 'vs.' : '@'} {m.rival}
-                          </Text>
-                          <Text style={styles.resultDate}>{formatDate(m.fecha)}</Text>
-                        </View>
-                        <Text style={styles.resultScore}>
-                          {m.goles_favor}-{m.goles_contra}
-                        </Text>
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
-            ) : (
-              <View style={styles.glassCard}>
-                <Text style={styles.noDataText}>Aún no hay resultados registrados</Text>
-              </View>
-            )}
+            {/* Acciones rápidas */}
+            <Text variant="titleLarge" style={styles.sectionTitle}>
+              Acciones rápidas
+            </Text>
+            <View style={styles.actionsContainer}>
+              <TouchableOpacity
+                style={styles.actionCard}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('FanMatches')}
+              >
+                <View style={styles.actionSurface}>
+                  <Icon name="soccer" size={40} color={FAN_ACCENT} />
+                  <Text variant="bodyMedium" style={styles.actionText}>
+                    Partidos
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionCard}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('FanSquad')}
+              >
+                <View style={styles.actionSurface}>
+                  <Icon name="account-group" size={40} color="#9C27B0" />
+                  <Text variant="bodyMedium" style={styles.actionText}>
+                    Plantilla
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionCard}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('FanStandings')}
+              >
+                <View style={styles.actionSurface}>
+                  <Icon name="trophy" size={40} color="#FF9800" />
+                  <Text variant="bodyMedium" style={styles.actionText}>
+                    Clasificación
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionCard}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('FanStandings')}
+              >
+                <View style={styles.actionSurface}>
+                  <Icon name="chart-bar" size={40} color="#43A047" />
+                  <Text variant="bodyMedium" style={styles.actionText}>
+                    Goleadores
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
           </>
         )}
       </ScrollView>
@@ -253,102 +297,93 @@ const FAN_ACCENT = '#1E88E5';
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f2027' },
   scrollContent: { paddingBottom: 40 },
-  loader: { marginTop: 40 },
 
-  teamHeader: {
-    margin: 16,
-    marginBottom: 8,
+  header: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: GLASS_BORDER,
+  },
+  headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  welcomeText: { fontWeight: 'bold', color: '#FFFFFF' },
+  headerSubtext: { color: 'rgba(255,255,255,0.5)', marginTop: 4 },
+  avatar: { backgroundColor: FAN_ACCENT },
+  loader: { marginTop: 60 },
+
+  statsContainer: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, gap: 12 },
+  statCard: {
+    flex: 1,
     padding: 16,
-    borderRadius: 16,
-    flexDirection: 'row',
+    borderRadius: 14,
     alignItems: 'center',
-    gap: 16,
     backgroundColor: GLASS_BG,
     borderWidth: 1,
     borderColor: GLASS_BORDER,
-    borderTopWidth: 3,
-    borderTopColor: FAN_ACCENT,
   },
-  teamInfo: { flex: 1, gap: 6 },
-  teamName: { color: '#FFFFFF', fontWeight: 'bold' },
-  teamMeta: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
-  teamChip: { backgroundColor: 'rgba(255,255,255,0.1)', height: 24 },
-  chipText: { color: 'rgba(255,255,255,0.85)', fontSize: 12 },
-  teamSeason: { color: 'rgba(255,255,255,0.5)', fontSize: 12 },
+  blueCard: { borderTopWidth: 3, borderTopColor: FAN_ACCENT },
+  greenCard: { borderTopWidth: 3, borderTopColor: '#43A047' },
+  redCard: { borderTopWidth: 3, borderTopColor: '#E53935' },
+  statNumber: { fontWeight: 'bold', marginTop: 8, color: '#FFFFFF' },
+  statLabel: { color: 'rgba(255,255,255,0.5)', marginTop: 4 },
 
   sectionTitle: {
-    color: FAN_ACCENT,
     fontWeight: 'bold',
     paddingHorizontal: 20,
-    marginTop: 16,
-    marginBottom: 10,
-    letterSpacing: 0.5,
+    marginTop: 4,
+    marginBottom: 12,
+    color: '#FFFFFF',
   },
 
   glassCard: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    padding: 14,
-    borderRadius: 14,
+    marginHorizontal: 20,
+    marginBottom: 24,
+    padding: 16,
+    borderRadius: 16,
     backgroundColor: GLASS_BG,
     borderWidth: 1,
     borderColor: GLASS_BORDER,
   },
-  statsRow: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 6 },
-  statItem: { alignItems: 'center', minWidth: 60 },
-  statNum: { fontWeight: 'bold', fontSize: 22 },
-  statNumSmall: { fontWeight: 'bold', fontSize: 18 },
-  statLabel: { color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 2 },
-  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginVertical: 8 },
-
-  matchHeader: { flexDirection: 'row', gap: 8, marginBottom: 14, flexWrap: 'wrap' },
-  dateChip: { backgroundColor: 'rgba(30,136,229,0.2)' },
-  outlinedChip: { borderColor: 'rgba(255,255,255,0.2)' },
-
-  matchup: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    marginVertical: 10,
-  },
-  matchTeam: { alignItems: 'center', gap: 6, flex: 1 },
-  matchTeamName: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 13,
-    textAlign: 'center',
-  },
-  vsText: { color: 'rgba(255,255,255,0.4)', fontWeight: 'bold', fontSize: 18 },
-
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.08)',
-  },
-  locationText: { color: 'rgba(255,255,255,0.55)', fontSize: 13, flex: 1 },
-
-  resultRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  resultBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  eventCardWrapper: { marginHorizontal: 20, marginBottom: 24 },
+  glassCardInner: {
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: GLASS_BG,
     borderWidth: 1,
+    borderColor: GLASS_BORDER,
+  },
+
+  teamStatsRow: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 8 },
+  teamStatItem: { alignItems: 'center' },
+  teamStatNum: { fontWeight: 'bold' },
+  teamStatLabel: { color: 'rgba(255,255,255,0.4)', marginTop: 2 },
+  teamStatsDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginVertical: 8 },
+  teamExtras: { marginTop: 10, gap: 6 },
+  teamExtraRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  teamExtraText: { color: 'rgba(255,255,255,0.65)' },
+
+  eventHeader: { flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' },
+  eventChip: { backgroundColor: 'rgba(30,136,229,0.2)' },
+  eventChipOutlined: { borderColor: 'rgba(255,255,255,0.2)' },
+  chipText: { color: 'rgba(255,255,255,0.85)', fontSize: 12 },
+  eventTitle: { fontWeight: 'bold', marginBottom: 8, color: '#FFFFFF' },
+  eventLocation: { color: 'rgba(255,255,255,0.5)', marginBottom: 12 },
+  eventFooter: { marginTop: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  attendanceContainer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  attendanceText: { color: FAN_ACCENT, fontWeight: '600' },
+  noEventText: { color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' },
+
+  actionsContainer: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 12 },
+  actionCard: { width: '48%' },
+  actionSurface: {
+    padding: 20,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: GLASS_BG,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+    height: 120,
   },
-  resultLetter: { fontWeight: 'bold', fontSize: 15 },
-  resultInfo: { flex: 1, gap: 2 },
-  resultRival: { color: '#FFFFFF', fontWeight: '600' },
-  resultDate: { color: 'rgba(255,255,255,0.5)', fontSize: 12 },
-  resultScore: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 },
-
-  noDataText: {
-    color: 'rgba(255,255,255,0.35)',
-    fontStyle: 'italic',
-    textAlign: 'center',
-  },
+  actionText: { marginTop: 12, textAlign: 'center', color: '#FFFFFF' },
 });

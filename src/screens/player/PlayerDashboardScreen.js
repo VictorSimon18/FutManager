@@ -1,10 +1,5 @@
-/**
- * PlayerDashboardScreen.js — Pantalla "Inicio" del rol jugador.
- * Muestra resumen del jugador: ficha, rendimiento, próximo evento y últimos partidos.
- */
-
 import React, { useContext, useMemo, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Text, Avatar, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,26 +12,11 @@ import { useTrainings } from '../../hooks/useTrainings';
 import { formatDate, formatTime } from '../../utils/dateUtils';
 import { getPositionColor } from '../../utils/positionUtils';
 
-// Devuelve iniciales a partir de un nombre completo
-function getInitials(nombre) {
-  if (!nombre) return '?';
-  const partes = nombre.trim().split(/\s+/);
-  if (partes.length === 1) return partes[0].charAt(0).toUpperCase();
-  return (partes[0].charAt(0) + partes[partes.length - 1].charAt(0)).toUpperCase();
-}
-
-// Devuelve letra y color del resultado (V/E/D) desde el punto de vista del equipo
-function resultInfo(stat) {
-  if (stat.goles_favor > stat.goles_contra) return { letra: 'V', color: '#43A047' };
-  if (stat.goles_favor < stat.goles_contra) return { letra: 'D', color: '#E53935' };
-  return { letra: 'E', color: 'rgba(255,255,255,0.35)' };
-}
-
-export default function PlayerDashboardScreen() {
-  const { roleData, equipoId } = useContext(AuthContext);
+export default function PlayerDashboardScreen({ navigation }) {
+  const { user, roleData, equipoId } = useContext(AuthContext);
   const jugadorId = roleData?.id ?? null;
 
-  const { stats, seasonStats, loading: loadingStats, refresh: refreshStats } = usePlayerStats(jugadorId);
+  const { seasonStats, loading: loadingStats, refresh: refreshStats } = usePlayerStats(jugadorId);
   const { upcomingMatches, loading: loadingMatches, refresh: refreshMatches } = useMatches(equipoId);
   const { upcomingTrainings, loading: loadingTrainings, refresh: refreshTrainings } = useTrainings(equipoId);
 
@@ -81,9 +61,10 @@ export default function PlayerDashboardScreen() {
     return eventos[0];
   }, [upcomingMatches, upcomingTrainings]);
 
-  const ultimosPartidos = stats.slice(0, 3);
   const positionColor = getPositionColor(roleData?.posicion);
-  const iniciales = getInitials(roleData?.nombre);
+  const s = seasonStats ?? {};
+  const valoracionMedia = s.valoracion_media != null ? Number(s.valoracion_media).toFixed(1) : '—';
+  const nombreCorto = (user?.nombre || roleData?.nombre)?.split(' ')[0] || 'Jugador';
 
   return (
     <View style={styles.container}>
@@ -95,43 +76,22 @@ export default function PlayerDashboardScreen() {
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header del jugador */}
-        <View style={styles.headerCard}>
-          {roleData?.foto_url ? (
-            <Avatar.Image size={64} source={{ uri: roleData.foto_url }} />
-          ) : (
-            <Avatar.Text
-              size={64}
-              label={iniciales}
-              style={{ backgroundColor: positionColor }}
-              labelStyle={{ color: '#FFFFFF', fontWeight: 'bold' }}
-            />
-          )}
-          <View style={styles.headerInfo}>
-            <Text variant="titleLarge" style={styles.playerName} numberOfLines={1}>
-              {roleData?.nombre || 'Jugador'}
-            </Text>
-            <View style={styles.metaRow}>
-              {roleData?.posicion ? (
-                <Chip
-                  compact
-                  style={[styles.chip, { backgroundColor: `${positionColor}33` }]}
-                  textStyle={styles.chipText}
-                >
-                  {roleData.posicion}
-                </Chip>
-              ) : null}
-              {roleData?.dorsal != null ? (
-                <Text variant="bodyMedium" style={[styles.dorsal, { color: positionColor }]}>
-                  #{roleData.dorsal}
-                </Text>
-              ) : null}
-            </View>
-            {roleData?.pie_dominante ? (
-              <Text variant="bodySmall" style={styles.metaText}>
-                Pie {roleData.pie_dominante}
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <View>
+              <Text variant="headlineSmall" style={styles.welcomeText}>
+                Bienvenido, {nombreCorto}
               </Text>
-            ) : null}
+              <Text variant="bodyMedium" style={styles.headerSubtext}>
+                Panel del jugador
+              </Text>
+            </View>
+            <Avatar.Icon
+              size={56}
+              icon="soccer"
+              style={[styles.avatar, { backgroundColor: positionColor }]}
+            />
           </View>
         </View>
 
@@ -139,129 +99,195 @@ export default function PlayerDashboardScreen() {
           <ActivityIndicator size="large" color={PLAYER_ACCENT} style={styles.loader} />
         ) : (
           <>
-            {/* Rendimiento */}
-            <Text variant="titleMedium" style={styles.sectionTitle}>RENDIMIENTO</Text>
-            <View style={styles.statsGrid}>
-              <View style={styles.statCard}>
-                <Icon name="soccer" size={26} color={PLAYER_ACCENT} />
-                <Text variant="headlineSmall" style={styles.statValue}>
-                  {seasonStats?.total_goles ?? 0}
+            {/* Stats Cards */}
+            <View style={styles.statsContainer}>
+              <View style={[styles.statCard, styles.greenCard]}>
+                <Icon name="soccer" size={32} color={PLAYER_ACCENT} />
+                <Text variant="headlineMedium" style={styles.statNumber}>
+                  {s.total_goles ?? 0}
                 </Text>
                 <Text variant="bodySmall" style={styles.statLabel}>Goles</Text>
               </View>
-              <View style={styles.statCard}>
-                <Icon name="shoe-cleat" size={26} color="#1E88E5" />
-                <Text variant="headlineSmall" style={styles.statValue}>
-                  {seasonStats?.total_asistencias ?? 0}
+
+              <View style={[styles.statCard, styles.blueCard]}>
+                <Icon name="shoe-cleat" size={32} color="#1E88E5" />
+                <Text variant="headlineMedium" style={styles.statNumber}>
+                  {s.total_asistencias ?? 0}
                 </Text>
                 <Text variant="bodySmall" style={styles.statLabel}>Asistencias</Text>
               </View>
-              <View style={styles.statCard}>
-                <Icon name="clipboard-list" size={26} color="#9C27B0" />
-                <Text variant="headlineSmall" style={styles.statValue}>
-                  {seasonStats?.partidos_jugados ?? 0}
+
+              <View style={[styles.statCard, styles.purpleCard]}>
+                <Icon name="clipboard-list" size={32} color="#9C27B0" />
+                <Text variant="headlineMedium" style={styles.statNumber}>
+                  {s.partidos_jugados ?? 0}
                 </Text>
                 <Text variant="bodySmall" style={styles.statLabel}>Partidos</Text>
               </View>
-              <View style={styles.statCard}>
-                <Icon name="clock-outline" size={26} color="#FF9800" />
-                <Text variant="headlineSmall" style={styles.statValue}>
-                  {seasonStats?.total_minutos ?? 0}'
-                </Text>
-                <Text variant="bodySmall" style={styles.statLabel}>Minutos</Text>
-              </View>
             </View>
 
-            {/* Próximo evento */}
-            <Text variant="titleMedium" style={styles.sectionTitle}>PRÓXIMO EVENTO</Text>
-            {proximoEvento ? (
-              <View style={styles.glassCard}>
-                <View style={styles.eventHeader}>
-                  <Chip icon="calendar" style={styles.eventChip} textStyle={styles.chipText}>
-                    {formatDate(proximoEvento.fecha)}{proximoEvento.hora ? `, ${formatTime(proximoEvento.hora)}` : ''}
-                  </Chip>
-                  <Chip
-                    icon={proximoEvento.tipo === 'partido' ? 'soccer' : 'whistle'}
-                    mode="outlined"
-                    style={styles.eventChipOutlined}
-                    textStyle={styles.chipText}
-                  >
-                    {proximoEvento.tipo === 'partido' ? 'Partido' : 'Entrenamiento'}
-                  </Chip>
-                </View>
-                <Text variant="titleMedium" style={styles.eventTitle} numberOfLines={2}>
-                  {proximoEvento.titulo}
+            {/* Rendimiento personal */}
+            {(s.partidos_jugados ?? 0) > 0 && (
+              <>
+                <Text variant="titleLarge" style={styles.sectionTitle}>
+                  Rendimiento personal
                 </Text>
-                {proximoEvento.ubicacion ? (
-                  <View style={styles.locationRow}>
-                    <Icon name="map-marker" size={16} color="rgba(255,255,255,0.5)" />
-                    <Text variant="bodyMedium" style={styles.eventLocation} numberOfLines={1}>
+                <View style={styles.glassCard}>
+                  <View style={styles.teamStatsRow}>
+                    <View style={styles.teamStatItem}>
+                      <Text variant="headlineMedium" style={[styles.teamStatNum, { color: '#FF9800' }]}>
+                        {s.total_minutos ?? 0}'
+                      </Text>
+                      <Text variant="bodySmall" style={styles.teamStatLabel}>Minutos</Text>
+                    </View>
+                    <View style={styles.teamStatItem}>
+                      <Text variant="headlineMedium" style={[styles.teamStatNum, { color: '#FFC107' }]}>
+                        {valoracionMedia}
+                      </Text>
+                      <Text variant="bodySmall" style={styles.teamStatLabel}>Valoración</Text>
+                    </View>
+                    <View style={styles.teamStatItem}>
+                      <Text variant="headlineMedium" style={[styles.teamStatNum, { color: PLAYER_ACCENT }]}>
+                        {s.veces_titular ?? 0}
+                      </Text>
+                      <Text variant="bodySmall" style={styles.teamStatLabel}>De titular</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.teamStatsDivider} />
+
+                  <View style={styles.teamStatsRow}>
+                    <View style={styles.teamStatItem}>
+                      <Text variant="titleLarge" style={[styles.teamStatNum, { color: '#FFC107' }]}>
+                        {s.total_amarillas ?? 0}
+                      </Text>
+                      <Text variant="bodySmall" style={styles.teamStatLabel}>T. Amarillas</Text>
+                    </View>
+                    <View style={styles.teamStatItem}>
+                      <Text variant="titleLarge" style={[styles.teamStatNum, { color: '#E53935' }]}>
+                        {s.total_rojas ?? 0}
+                      </Text>
+                      <Text variant="bodySmall" style={styles.teamStatLabel}>T. Rojas</Text>
+                    </View>
+                    <View style={styles.teamStatItem}>
+                      <Text variant="titleLarge" style={[styles.teamStatNum, { color: '#FFFFFF' }]}>
+                        {s.total_entradas ?? 0}
+                      </Text>
+                      <Text variant="bodySmall" style={styles.teamStatLabel}>Entradas</Text>
+                    </View>
+                  </View>
+                </View>
+              </>
+            )}
+
+            {/* Próximo Evento */}
+            <Text variant="titleLarge" style={styles.sectionTitle}>
+              Próximo evento
+            </Text>
+            {proximoEvento ? (
+              <TouchableOpacity
+                style={styles.eventCardWrapper}
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate('PlayerCalendar')}
+              >
+                <View style={styles.glassCardInner}>
+                  <View style={styles.eventHeader}>
+                    <Chip icon="calendar" style={styles.eventChip} textStyle={styles.chipText}>
+                      {formatDate(proximoEvento.fecha)}{proximoEvento.hora ? `, ${formatTime(proximoEvento.hora)}` : ''}
+                    </Chip>
+                    <Chip
+                      icon={proximoEvento.tipo === 'partido' ? 'soccer' : 'whistle'}
+                      mode="outlined"
+                      style={styles.eventChipOutlined}
+                      textStyle={styles.chipText}
+                    >
+                      {proximoEvento.tipo === 'partido' ? 'Partido' : 'Entrenamiento'}
+                    </Chip>
+                  </View>
+                  <Text variant="titleLarge" style={styles.eventTitle} numberOfLines={2}>
+                    {proximoEvento.titulo}
+                  </Text>
+                  {proximoEvento.ubicacion ? (
+                    <Text variant="bodyMedium" style={styles.eventLocation} numberOfLines={1} ellipsizeMode="tail">
                       {proximoEvento.ubicacion}
                     </Text>
+                  ) : null}
+                  <View style={styles.eventFooter}>
+                    <View style={styles.attendanceContainer}>
+                      <Icon name="calendar-clock" size={20} color={PLAYER_ACCENT} />
+                      <Text variant="bodyMedium" style={styles.attendanceText}>
+                        Ver calendario completo
+                      </Text>
+                    </View>
+                    <Icon name="chevron-right" size={20} color="rgba(255,255,255,0.3)" />
                   </View>
-                ) : null}
-              </View>
+                </View>
+              </TouchableOpacity>
             ) : (
               <View style={styles.glassCard}>
-                <Text variant="bodyMedium" style={styles.noDataText}>
+                <Text variant="bodyMedium" style={styles.noEventText}>
                   No hay eventos próximos programados
                 </Text>
               </View>
             )}
 
-            {/* Últimos partidos */}
-            <Text variant="titleMedium" style={styles.sectionTitle}>ÚLTIMOS PARTIDOS</Text>
-            {ultimosPartidos.length > 0 ? (
-              <View style={styles.glassCard}>
-                {ultimosPartidos.map((stat, i) => {
-                  const { letra, color } = resultInfo(stat);
-                  return (
-                    <View key={stat.id ?? i}>
-                      {i > 0 && <View style={styles.divider} />}
-                      <View style={styles.matchRow}>
-                        <View style={[styles.resultBadge, { backgroundColor: `${color}33`, borderColor: color }]}>
-                          <Text style={[styles.resultLetter, { color }]}>{letra}</Text>
-                        </View>
-                        <View style={styles.matchInfo}>
-                          <Text variant="bodyMedium" style={styles.matchRival} numberOfLines={1}>
-                            vs. {stat.rival}
-                          </Text>
-                          <Text variant="bodySmall" style={styles.matchDate}>
-                            {formatDate(stat.fecha)} · {stat.goles_favor}-{stat.goles_contra}
-                          </Text>
-                          <View style={styles.matchStats}>
-                            <View style={styles.statMini}>
-                              <Icon name="soccer" size={14} color={PLAYER_ACCENT} />
-                              <Text style={styles.statMiniText}>{stat.goles ?? 0}</Text>
-                            </View>
-                            <View style={styles.statMini}>
-                              <Icon name="shoe-cleat" size={14} color="#1E88E5" />
-                              <Text style={styles.statMiniText}>{stat.asistencias ?? 0}</Text>
-                            </View>
-                            <View style={styles.statMini}>
-                              <Icon name="clock-outline" size={14} color="rgba(255,255,255,0.5)" />
-                              <Text style={styles.statMiniText}>{stat.minutos_jugados ?? 0}'</Text>
-                            </View>
-                            {stat.valoracion != null ? (
-                              <View style={styles.statMini}>
-                                <Icon name="star" size={14} color="#FFC107" />
-                                <Text style={styles.statMiniText}>{Number(stat.valoracion).toFixed(1)}</Text>
-                              </View>
-                            ) : null}
-                          </View>
-                        </View>
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
-            ) : (
-              <View style={styles.glassCard}>
-                <Text variant="bodyMedium" style={styles.noDataText}>
-                  Aún no hay partidos registrados
-                </Text>
-              </View>
-            )}
+            {/* Acciones rápidas */}
+            <Text variant="titleLarge" style={styles.sectionTitle}>
+              Acciones rápidas
+            </Text>
+            <View style={styles.actionsContainer}>
+              <TouchableOpacity
+                style={styles.actionCard}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('PlayerStats')}
+              >
+                <View style={styles.actionSurface}>
+                  <Icon name="chart-bar" size={40} color={PLAYER_ACCENT} />
+                  <Text variant="bodyMedium" style={styles.actionText}>
+                    Mis estadísticas
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionCard}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('PlayerCalendar')}
+              >
+                <View style={styles.actionSurface}>
+                  <Icon name="calendar-month" size={40} color="#1E88E5" />
+                  <Text variant="bodyMedium" style={styles.actionText}>
+                    Calendario
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionCard}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('PlayerTeam')}
+              >
+                <View style={styles.actionSurface}>
+                  <Icon name="account-group" size={40} color="#9C27B0" />
+                  <Text variant="bodyMedium" style={styles.actionText}>
+                    Mi equipo
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionCard}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('PlayerProfile')}
+              >
+                <View style={styles.actionSurface}>
+                  <Icon name="account-circle" size={40} color="#FF9800" />
+                  <Text variant="bodyMedium" style={styles.actionText}>
+                    Mi perfil
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
           </>
         )}
       </ScrollView>
@@ -276,92 +302,90 @@ const PLAYER_ACCENT = '#00AA13';
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f2027' },
   scrollContent: { paddingBottom: 40 },
+
+  header: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: GLASS_BORDER,
+  },
+  headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  welcomeText: { fontWeight: 'bold', color: '#FFFFFF' },
+  headerSubtext: { color: 'rgba(255,255,255,0.5)', marginTop: 4 },
+  avatar: {},
   loader: { marginTop: 60 },
 
-  headerCard: {
-    margin: 20,
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    backgroundColor: GLASS_BG,
-    borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    borderTopWidth: 3,
-    borderTopColor: PLAYER_ACCENT,
-  },
-  headerInfo: { flex: 1, gap: 6 },
-  playerName: { color: '#FFFFFF', fontWeight: 'bold' },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  chip: { height: 26 },
-  chipText: { color: 'rgba(255,255,255,0.85)', fontSize: 12 },
-  dorsal: { fontWeight: 'bold' },
-  metaText: { color: 'rgba(255,255,255,0.5)' },
-
-  sectionTitle: {
-    color: PLAYER_ACCENT,
-    fontWeight: 'bold',
-    paddingHorizontal: 20,
-    marginTop: 12,
-    marginBottom: 10,
-    letterSpacing: 0.5,
-  },
-
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 20,
-    gap: 10,
-    marginBottom: 8,
-  },
+  statsContainer: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, gap: 12 },
   statCard: {
-    width: '48%',
-    padding: 14,
+    flex: 1,
+    padding: 16,
     borderRadius: 14,
     alignItems: 'center',
     backgroundColor: GLASS_BG,
     borderWidth: 1,
     borderColor: GLASS_BORDER,
-    borderTopWidth: 3,
-    borderTopColor: PLAYER_ACCENT,
   },
-  statValue: { color: '#FFFFFF', fontWeight: 'bold', marginTop: 6 },
-  statLabel: { color: 'rgba(255,255,255,0.5)', marginTop: 2 },
+  greenCard: { borderTopWidth: 3, borderTopColor: PLAYER_ACCENT },
+  blueCard: { borderTopWidth: 3, borderTopColor: '#1E88E5' },
+  purpleCard: { borderTopWidth: 3, borderTopColor: '#9C27B0' },
+  statNumber: { fontWeight: 'bold', marginTop: 8, color: '#FFFFFF' },
+  statLabel: { color: 'rgba(255,255,255,0.5)', marginTop: 4 },
+
+  sectionTitle: {
+    fontWeight: 'bold',
+    paddingHorizontal: 20,
+    marginTop: 4,
+    marginBottom: 12,
+    color: '#FFFFFF',
+  },
 
   glassCard: {
     marginHorizontal: 20,
-    marginBottom: 16,
+    marginBottom: 24,
     padding: 16,
     borderRadius: 16,
     backgroundColor: GLASS_BG,
     borderWidth: 1,
     borderColor: GLASS_BORDER,
   },
+  eventCardWrapper: { marginHorizontal: 20, marginBottom: 24 },
+  glassCardInner: {
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: GLASS_BG,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+  },
+
+  teamStatsRow: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 8 },
+  teamStatItem: { alignItems: 'center' },
+  teamStatNum: { fontWeight: 'bold' },
+  teamStatLabel: { color: 'rgba(255,255,255,0.4)', marginTop: 2 },
+  teamStatsDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginVertical: 8 },
+
   eventHeader: { flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' },
   eventChip: { backgroundColor: 'rgba(0,170,19,0.2)' },
   eventChipOutlined: { borderColor: 'rgba(255,255,255,0.2)' },
-  eventTitle: { color: '#FFFFFF', fontWeight: 'bold', marginBottom: 6 },
-  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  eventLocation: { color: 'rgba(255,255,255,0.55)', flex: 1 },
-  noDataText: { color: 'rgba(255,255,255,0.35)', fontStyle: 'italic', textAlign: 'center' },
+  chipText: { color: 'rgba(255,255,255,0.85)', fontSize: 12 },
+  eventTitle: { fontWeight: 'bold', marginBottom: 8, color: '#FFFFFF' },
+  eventLocation: { color: 'rgba(255,255,255,0.5)', marginBottom: 12 },
+  eventFooter: { marginTop: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  attendanceContainer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  attendanceText: { color: PLAYER_ACCENT, fontWeight: '600' },
+  noEventText: { color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' },
 
-  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginVertical: 10 },
-  matchRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  resultBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
+  actionsContainer: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 12 },
+  actionCard: { width: '48%' },
+  actionSurface: {
+    padding: 20,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: GLASS_BG,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+    height: 120,
   },
-  resultLetter: { fontWeight: 'bold', fontSize: 18 },
-  matchInfo: { flex: 1, gap: 3 },
-  matchRival: { color: '#FFFFFF', fontWeight: '600' },
-  matchDate: { color: 'rgba(255,255,255,0.5)' },
-  matchStats: { flexDirection: 'row', gap: 12, marginTop: 4 },
-  statMini: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  statMiniText: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '600' },
+  actionText: { marginTop: 12, textAlign: 'center', color: '#FFFFFF' },
 });

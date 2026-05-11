@@ -1,10 +1,6 @@
-/**
- * FanMatchesScreen.js — Listado completo de partidos del equipo (solo lectura).
- */
-
 import React, { useContext, useMemo, useCallback } from 'react';
 import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
-import { Text, Chip } from 'react-native-paper';
+import { Text, Avatar, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
@@ -26,7 +22,6 @@ export default function FanMatchesScreen() {
 
   useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
 
-  // Próximos primero, luego pasados
   const sortedMatches = useMemo(() => {
     const copy = [...matches];
     copy.sort((a, b) => {
@@ -98,6 +93,21 @@ export default function FanMatchesScreen() {
         end={{ x: 0.4, y: 1 }}
       />
 
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <View>
+            <Text variant="headlineSmall" style={styles.welcomeText}>
+              Partidos
+            </Text>
+            <Text variant="bodyMedium" style={styles.headerSubtext}>
+              Calendario del equipo
+            </Text>
+          </View>
+          <Avatar.Icon size={56} icon="soccer" style={styles.avatar} />
+        </View>
+      </View>
+
       {loading ? (
         <ActivityIndicator size="large" color={FAN_ACCENT} style={styles.loader} />
       ) : (
@@ -126,6 +136,18 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f2027' },
   loader: { marginTop: 40 },
   listContent: { padding: 16, paddingBottom: 40 },
+
+  header: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: GLASS_BORDER,
+  },
+  headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  welcomeText: { fontWeight: 'bold', color: '#FFFFFF' },
+  headerSubtext: { color: 'rgba(255,255,255,0.5)', marginTop: 4 },
+  avatar: { backgroundColor: FAN_ACCENT },
 
   card: {
     padding: 14,

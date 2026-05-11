@@ -1,10 +1,6 @@
-/**
- * PlayerProfileScreen.js — Ficha personal del jugador, asistencia y cierre de sesión.
- */
-
 import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { Text, Avatar, Chip, Button, ProgressBar } from 'react-native-paper';
+import { Text, Avatar, Button, ProgressBar } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
@@ -74,52 +70,47 @@ export default function PlayerProfileScreen() {
         end={{ x: 0.4, y: 1 }}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Ficha personal */}
-        <View style={styles.profileCard}>
-          <View style={[styles.avatarWrap, { borderColor: positionColor }]}>
-            {roleData?.foto_url ? (
-              <Avatar.Image size={88} source={{ uri: roleData.foto_url }} />
-            ) : (
-              <Avatar.Text
-                size={88}
-                label={iniciales}
-                style={{ backgroundColor: positionColor }}
-                labelStyle={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 32 }}
-              />
-            )}
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerTextWrap}>
+            <Text variant="headlineSmall" style={styles.welcomeText} numberOfLines={1}>
+              {roleData?.nombre || 'Jugador'}
+            </Text>
+            <Text variant="bodyMedium" style={styles.headerSubtext}>
+              {roleData?.posicion || 'Mi perfil'}{roleData?.dorsal != null ? ` · #${roleData.dorsal}` : ''}
+            </Text>
           </View>
-          <Text variant="headlineSmall" style={styles.playerName}>
-            {roleData?.nombre || 'Jugador'}
-          </Text>
-          <View style={styles.playerMeta}>
-            {roleData?.posicion ? (
-              <Chip
-                compact
-                style={[styles.chip, { backgroundColor: `${positionColor}33` }]}
-                textStyle={styles.chipText}
-              >
-                {roleData.posicion}
-              </Chip>
-            ) : null}
-            {roleData?.dorsal != null ? (
-              <Text style={[styles.dorsal, { color: positionColor }]}>
-                #{roleData.dorsal}
-              </Text>
-            ) : null}
-          </View>
+          {roleData?.foto_url ? (
+            <Avatar.Image
+              size={56}
+              source={{ uri: roleData.foto_url }}
+              style={{ borderWidth: 2, borderColor: positionColor }}
+            />
+          ) : (
+            <Avatar.Text
+              size={56}
+              label={iniciales}
+              style={{ backgroundColor: positionColor }}
+              labelStyle={{ color: '#FFFFFF', fontWeight: 'bold' }}
+            />
+          )}
+        </View>
+      </View>
 
-          <View style={styles.infoGrid}>
-            <InfoRow icon="cake-variant" label="Nacimiento" value={formatDate(roleData?.fecha_nacimiento)} />
-            <InfoRow icon="human-male-height" label="Altura" value={roleData?.altura ? `${roleData.altura} m` : null} />
-            <InfoRow icon="weight-kilogram" label="Peso" value={roleData?.peso ? `${roleData.peso} kg` : null} />
-            <InfoRow icon="foot-print" label="Pie" value={roleData?.pie_dominante} />
-            <InfoRow icon="account" label="Sexo" value={roleData?.sexo} />
-          </View>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Datos personales */}
+        <Text variant="titleLarge" style={styles.sectionTitle}>Datos personales</Text>
+        <View style={styles.glassCard}>
+          <InfoRow icon="cake-variant" label="Nacimiento" value={formatDate(roleData?.fecha_nacimiento)} />
+          <InfoRow icon="human-male-height" label="Altura" value={roleData?.altura ? `${roleData.altura} m` : null} />
+          <InfoRow icon="weight-kilogram" label="Peso" value={roleData?.peso ? `${roleData.peso} kg` : null} />
+          <InfoRow icon="foot-print" label="Pie dominante" value={roleData?.pie_dominante} />
+          <InfoRow icon="account" label="Sexo" value={roleData?.sexo} />
         </View>
 
         {/* Asistencia a entrenamientos */}
-        <Text variant="titleMedium" style={styles.sectionTitle}>ASISTENCIA A ENTRENAMIENTOS</Text>
+        <Text variant="titleLarge" style={styles.sectionTitle}>Asistencia a entrenamientos</Text>
         <View style={styles.glassCard}>
           {loadingAttendance ? (
             <ActivityIndicator size="small" color={PLAYER_ACCENT} />
@@ -144,7 +135,7 @@ export default function PlayerProfileScreen() {
         </View>
 
         {/* Información del equipo */}
-        <Text variant="titleMedium" style={styles.sectionTitle}>INFORMACIÓN DEL EQUIPO</Text>
+        <Text variant="titleLarge" style={styles.sectionTitle}>Información del equipo</Text>
         <View style={styles.glassCard}>
           <InfoRow icon="shield-star" label="Equipo" value={team?.nombre} />
           <InfoRow icon="trophy" label="Categoría" value={team?.categoria} />
@@ -179,48 +170,24 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f2027' },
   scrollContent: { paddingBottom: 40 },
 
-  profileCard: {
-    margin: 16,
-    padding: 20,
-    borderRadius: 16,
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: GLASS_BG,
-    borderWidth: 1,
-    borderColor: GLASS_BORDER,
-    borderTopWidth: 3,
-    borderTopColor: PLAYER_ACCENT,
+  header: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: GLASS_BORDER,
   },
-  avatarWrap: {
-    borderWidth: 3,
-    borderRadius: 48,
-    padding: 3,
-  },
-  playerName: { color: '#FFFFFF', fontWeight: 'bold', textAlign: 'center' },
-  playerMeta: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
-  chip: { height: 28 },
-  chipText: { color: 'rgba(255,255,255,0.9)', fontSize: 13 },
-  dorsal: { fontWeight: 'bold', fontSize: 20 },
-
-  infoGrid: {
-    width: '100%',
-    gap: 8,
-    marginTop: 4,
-    paddingTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.08)',
-  },
-  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  infoLabel: { color: 'rgba(255,255,255,0.5)', flex: 1, fontSize: 13 },
-  infoValue: { color: '#FFFFFF', fontWeight: '600', fontSize: 13 },
+  headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  headerTextWrap: { flex: 1, marginRight: 12 },
+  welcomeText: { fontWeight: 'bold', color: '#FFFFFF' },
+  headerSubtext: { color: 'rgba(255,255,255,0.5)', marginTop: 4 },
 
   sectionTitle: {
-    color: PLAYER_ACCENT,
     fontWeight: 'bold',
     paddingHorizontal: 20,
-    marginTop: 12,
-    marginBottom: 10,
-    letterSpacing: 0.5,
+    marginTop: 16,
+    marginBottom: 12,
+    color: '#FFFFFF',
   },
 
   glassCard: {
@@ -233,6 +200,10 @@ const styles = StyleSheet.create({
     borderColor: GLASS_BORDER,
     gap: 10,
   },
+
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  infoLabel: { color: 'rgba(255,255,255,0.5)', flex: 1, fontSize: 13 },
+  infoValue: { color: '#FFFFFF', fontWeight: '600', fontSize: 13 },
 
   attendanceHeader: {
     flexDirection: 'row',

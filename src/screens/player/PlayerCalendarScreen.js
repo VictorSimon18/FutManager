@@ -1,11 +1,6 @@
-/**
- * PlayerCalendarScreen.js — Calendario del jugador.
- * Muestra partidos y entrenamientos del equipo con tabs Partidos/Entrenamientos.
- */
-
 import React, { useContext, useState, useMemo, useCallback } from 'react';
 import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
-import { Text, SegmentedButtons, Chip } from 'react-native-paper';
+import { Text, Avatar, SegmentedButtons, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
@@ -44,35 +39,30 @@ export default function PlayerCalendarScreen() {
     }, [refreshMatches, refreshTrainings, refreshStats, refreshAttendance])
   );
 
-  // Set de IDs de partidos donde participó el jugador
   const playedMatchIds = useMemo(() => {
     const set = new Set();
     for (const s of stats) if (s.partido_id) set.add(s.partido_id);
     return set;
   }, [stats]);
 
-  // Mapa partidoId → stats del jugador (para mostrar contribución)
   const statsByMatch = useMemo(() => {
     const map = {};
     for (const s of stats) map[s.partido_id] = s;
     return map;
   }, [stats]);
 
-  // Mapa entrenamientoId → registro de asistencia
   const attendanceByTraining = useMemo(() => {
     const map = {};
     for (const a of attendance) map[a.entrenamiento_id] = a;
     return map;
   }, [attendance]);
 
-  // Partidos ordenados: próximos primero, luego pasados
   const sortedMatches = useMemo(() => {
     const copy = [...matches];
     copy.sort((a, b) => {
       const aUpcoming = a.estado === 'programado';
       const bUpcoming = b.estado === 'programado';
       if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
-      // Próximos: ascendente; pasados: descendente
       if (aUpcoming) return a.fecha.localeCompare(b.fecha);
       return b.fecha.localeCompare(a.fecha);
     });
@@ -249,6 +239,21 @@ export default function PlayerCalendarScreen() {
         end={{ x: 0.4, y: 1 }}
       />
 
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <View>
+            <Text variant="headlineSmall" style={styles.welcomeText}>
+              Calendario
+            </Text>
+            <Text variant="bodyMedium" style={styles.headerSubtext}>
+              Partidos y entrenamientos
+            </Text>
+          </View>
+          <Avatar.Icon size={56} icon="calendar-month" style={styles.avatar} />
+        </View>
+      </View>
+
       <View style={styles.tabsContainer}>
         <SegmentedButtons
           value={tab}
@@ -297,6 +302,19 @@ const PLAYER_ACCENT = '#00AA13';
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f2027' },
+
+  header: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: GLASS_BORDER,
+  },
+  headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  welcomeText: { fontWeight: 'bold', color: '#FFFFFF' },
+  headerSubtext: { color: 'rgba(255,255,255,0.5)', marginTop: 4 },
+  avatar: { backgroundColor: PLAYER_ACCENT },
+
   tabsContainer: { padding: 16 },
   loader: { marginTop: 40 },
   listContent: { paddingHorizontal: 16, paddingBottom: 40 },
