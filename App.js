@@ -14,6 +14,7 @@ import { theme } from './src/theme/theme';
 import { initDatabase } from './src/database/database';
 import { seedDatabase } from './src/database/seed';
 import { AuthProvider } from './src/context/AuthContext';
+import { requestNotificationPermissions } from './src/utils/notifications';
 
 // ── Fuente de emojis ─────────────────────────────────────────────────────────
 // Para activar NotoEmoji:
@@ -35,6 +36,7 @@ export default function App() {
       try {
         await initDatabase();
         await seedDatabase();
+        await requestNotificationPermissions();
         setDbReady(true);
       } catch (error) {
         console.error('[App] Error al inicializar la base de datos:', error);

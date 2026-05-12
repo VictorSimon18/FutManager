@@ -14,6 +14,8 @@ import { AuthContext } from '../../context/AuthContext';
 import { formatDate, formatTime } from '../../utils/dateUtils';
 import StatBadge from '../../components/StatBadge';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import { EventBus, EVENTS } from '../../utils/eventBus';
+import { sendLocalNotification } from '../../utils/notifications';
 
 const GLASS_BG = 'rgba(255,255,255,0.08)';
 const GLASS_BORDER = 'rgba(255,255,255,0.13)';
@@ -200,6 +202,15 @@ export default function MatchDetailScreen({ route, navigation }) {
       setStatsFormModal(false);
       setSelectedPlayer(null);
       load();
+      EventBus.emit(EVENTS.STATS_UPDATED, {
+        jugadorId: selectedPlayer.id,
+        jugadorNombre: selectedPlayer.nombre,
+        rival: match?.rival,
+      });
+      sendLocalNotification(
+        '⚽ Estadísticas actualizadas',
+        `El entrenador ha registrado las estadísticas de ${selectedPlayer.nombre} vs. ${match?.rival || 'rival'}`
+      );
       if (amarillas >= 2) {
         setSnackbarMsg('2 amarillas = expulsión (roja automática añadida)');
         setSnackbarVisible(true);

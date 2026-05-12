@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useCallback } from 'react';
+import React, { useContext, useEffect, useMemo, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Text, Avatar, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import { useMatches } from '../../hooks/useMatches';
 import { useTrainings } from '../../hooks/useTrainings';
 import { formatDate, formatTime } from '../../utils/dateUtils';
 import { getPositionColor } from '../../utils/positionUtils';
+import { EventBus, EVENTS } from '../../utils/eventBus';
 
 export default function PlayerDashboardScreen({ navigation }) {
   const { user, roleData, equipoId } = useContext(AuthContext);
@@ -27,6 +28,14 @@ export default function PlayerDashboardScreen({ navigation }) {
       refreshTrainings();
     }, [refreshStats, refreshMatches, refreshTrainings])
   );
+
+  // Suscripción a eventos del entrenador para actualización en tiempo real
+  useEffect(() => {
+    const u1 = EventBus.on(EVENTS.STATS_UPDATED, refreshStats);
+    const u2 = EventBus.on(EVENTS.MATCH_CREATED, refreshMatches);
+    const u3 = EventBus.on(EVENTS.TRAINING_CREATED, refreshTrainings);
+    return () => { u1(); u2(); u3(); };
+  }, [refreshStats, refreshMatches, refreshTrainings]);
 
   const isLoading = loadingStats || loadingMatches || loadingTrainings;
 

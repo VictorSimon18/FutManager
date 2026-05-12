@@ -1,4 +1,4 @@
-import React, { useContext, useState, useMemo, useCallback } from 'react';
+import React, { useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { Text, Avatar, SegmentedButtons, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import { useTrainings } from '../../hooks/useTrainings';
 import { usePlayerStats } from '../../hooks/usePlayerStats';
 import { usePlayerTrainingHistory } from '../../hooks/usePlayerRole';
 import { formatDate, formatTime } from '../../utils/dateUtils';
+import { EventBus, EVENTS } from '../../utils/eventBus';
 
 function resultChip(estado, golesFavor, golesContra) {
   if (estado !== 'finalizado') return null;
@@ -38,6 +39,13 @@ export default function PlayerCalendarScreen() {
       refreshAttendance();
     }, [refreshMatches, refreshTrainings, refreshStats, refreshAttendance])
   );
+
+  useEffect(() => {
+    const u1 = EventBus.on(EVENTS.MATCH_CREATED, refreshMatches);
+    const u2 = EventBus.on(EVENTS.TRAINING_CREATED, refreshTrainings);
+    const u3 = EventBus.on(EVENTS.STATS_UPDATED, refreshStats);
+    return () => { u1(); u2(); u3(); };
+  }, [refreshMatches, refreshTrainings, refreshStats]);
 
   const playedMatchIds = useMemo(() => {
     const set = new Set();

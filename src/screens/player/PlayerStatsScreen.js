@@ -1,4 +1,4 @@
-import React, { useContext, useCallback } from 'react';
+import React, { useContext, useEffect, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Text, Avatar } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { AuthContext } from '../../context/AuthContext';
 import { usePlayerStats } from '../../hooks/usePlayerStats';
 import { formatDate } from '../../utils/dateUtils';
+import { EventBus, EVENTS } from '../../utils/eventBus';
 
 function resultInfo(goles_favor, goles_contra) {
   if (goles_favor > goles_contra) return { letra: 'V', color: '#43A047' };
@@ -33,6 +34,11 @@ export default function PlayerStatsScreen() {
   const { stats, seasonStats, loading, refresh } = usePlayerStats(jugadorId);
 
   useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
+
+  useEffect(() => {
+    const unsub = EventBus.on(EVENTS.STATS_UPDATED, refresh);
+    return unsub;
+  }, [refresh]);
 
   const s = seasonStats ?? {};
   const partidosJugados = s.partidos_jugados ?? 0;
