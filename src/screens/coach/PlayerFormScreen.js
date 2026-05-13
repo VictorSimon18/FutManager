@@ -5,6 +5,7 @@ import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from '../../context/AuthContext';
 import { createPlayer, getPlayerById, updatePlayer, getPlayersByTeam } from '../../database/services/playerService';
+import { getUserByEmail, getUserById } from '../../database/services/userService';
 import { formatDate, parseDate } from '../../utils/dateUtils';
 
 const GLASS_BG = 'rgba(255,255,255,0.08)';
@@ -87,6 +88,9 @@ export default function PlayerFormScreen({ route, navigation }) {
   const [altura, setAltura] = useState('');
   const [peso, setPeso] = useState('');
   const [pieDominante, setPieDominante] = useState('Derecho');
+  const [emailVinculado, setEmailVinculado] = useState('');
+  const [linkedUserId, setLinkedUserId] = useState(null);
+  const [linkStatus, setLinkStatus] = useState(null); // 'linked' | 'not_found' | null
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -106,8 +110,33 @@ export default function PlayerFormScreen({ route, navigation }) {
       setAltura(p.altura != null ? String(p.altura) : '');
       setPeso(p.peso != null ? String(p.peso) : '');
       setPieDominante(p.pie_dominante ?? 'Derecho');
+      if (p.usuario_id) {
+        const u = await getUserById(p.usuario_id);
+        if (u) {
+          setEmailVinculado(u.email);
+          setLinkedUserId(u.id);
+          setLinkStatus('linked');
+        }
+      }
     } catch (e) {
       Alert.alert('Error', 'No se pudo cargar el jugador.');
+    }
+  }
+
+  async function handleVerificarEmail() {
+    const email = emailVinculado.trim().toLowerCase();
+    if (!email) {
+      setLinkedUserId(null);
+      setLinkStatus(null);
+      return;
+    }
+    const u = await getUserByEmail(email);
+    if (u) {
+      setLinkedUserId(u.id);
+      setLinkStatus('linked');
+    } else {
+      setLinkedUserId(null);
+      setLinkStatus('not_found');
     }
   }
 
@@ -122,6 +151,9 @@ export default function PlayerFormScreen({ route, navigation }) {
     }
     if (altura && isNaN(Number(altura))) e.altura = 'Introduce un valor válido.';
     if (peso && isNaN(Number(peso))) e.peso = 'Introduce un valor válido.';
+    if (emailVinculado.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVinculado.trim())) {
+      e.email = 'El formato del email no es válido.';
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -143,6 +175,45 @@ export default function PlayerFormScreen({ route, navigation }) {
           return;
         }
       }
+
+      // Resolver usuario_id a partir del email introducido
+      let resolvedUserId = linkedUserId;
+      const emailTrimmed = emailVinculado.trim().toLowerCase();
+      if (emailTrimmed && linkStatus !== 'linked') {
+        const u = await getUserByEmail(emailTrimmed);
+        if (u) {
+          resolvedUserId = u.id;
+        } else {
+          // Email escrito pero sin cuenta registrada — preguntar al entrenador
+          setSaving(false);
+          Alert.alert(
+            'Email no encontrado',
+            `No existe ninguna cuenta con el email "${emailTrimmed}". El jugador puede registrarse después con ese email y quedará vinculado.\n\n¿Guardar igualmente sin vinculación?`,
+            [
+              { text: 'Cancelar', style: 'cancel' },
+              {
+                text: 'Guardar sin vincular',
+                onPress: async () => {
+                  setSaving(true);
+                  await doSave(null);
+                },
+              },
+            ]
+          );
+          return;
+        }
+      }
+
+      await doSave(resolvedUserId);
+    } catch {
+      Alert.alert('Error', 'No se pudo guardar el jugador. Inténtalo de nuevo.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function doSave(resolvedUserId) {
+    try {
       const data = {
         equipo_id: equipoId,
         nombre: nombre.trim(),
@@ -153,6 +224,7 @@ export default function PlayerFormScreen({ route, navigation }) {
         altura: altura ? parseFloat(altura) : null,
         peso: peso ? parseFloat(peso) : null,
         pie_dominante: pieDominante || null,
+        usuario_id: resolvedUserId ?? undefined,
       };
       if (isEditing) {
         await updatePlayer(playerId, data);
@@ -160,7 +232,7 @@ export default function PlayerFormScreen({ route, navigation }) {
         await createPlayer(data);
       }
       navigation.goBack();
-    } catch (e) {
+    } catch {
       Alert.alert('Error', 'No se pudo guardar el jugador. Inténtalo de nuevo.');
     } finally {
       setSaving(false);
@@ -241,6 +313,56 @@ export default function PlayerFormScreen({ route, navigation }) {
           style={styles.segmented}
         />
 
+        <SectionTitle text="Vinculación de cuenta" />
+        <View style={styles.emailRow}>
+          <TextInput
+            label="Email del jugador (opcional)"
+            value={emailVinculado}
+            onChangeText={(v) => {
+              setEmailVinculado(v);
+              setLinkStatus(null);
+              setLinkedUserId(null);
+            }}
+            onBlur={handleVerificarEmail}
+            mode="outlined"
+            theme={INPUT_THEME}
+            textColor="#FFFFFF"
+            style={[styles.input, styles.emailInput]}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            placeholder="jugador@email.com"
+            placeholderTextColor="rgba(255,255,255,0.4)"
+            error={!!errors.email}
+            right={
+              linkStatus === 'linked'
+                ? <TextInput.Icon icon="check-circle" color="#43A047" />
+                : linkStatus === 'not_found'
+                ? <TextInput.Icon icon="alert-circle" color="#E53935" />
+                : null
+            }
+          />
+        </View>
+        <HelperText type="error" visible={!!errors.email}>{errors.email}</HelperText>
+        {linkStatus === 'linked' && (
+          <View style={styles.linkBadge}>
+            <Icon name="check-circle" size={14} color="#43A047" />
+            <Text style={styles.linkBadgeText}>Cuenta encontrada — se vinculará al guardar</Text>
+          </View>
+        )}
+        {linkStatus === 'not_found' && (
+          <View style={[styles.linkBadge, styles.linkBadgeWarn]}>
+            <Icon name="information" size={14} color="#FF9800" />
+            <Text style={[styles.linkBadgeText, { color: '#FF9800' }]}>
+              No existe cuenta con ese email. El jugador puede registrarse después.
+            </Text>
+          </View>
+        )}
+        {!emailVinculado && (
+          <Text style={styles.emailHint}>
+            Si el jugador ya tiene cuenta en la app, introduce su email para vincular su ficha automáticamente.
+          </Text>
+        )}
+
         <SectionTitle text="Datos físicos" />
         <View style={styles.row}>
           <TextInput
@@ -319,4 +441,30 @@ const styles = StyleSheet.create({
   posicionLabel: { fontSize: 13, color: 'rgba(255,255,255,0.7)' },
   posicionLabelActive: { color: '#fff', fontWeight: 'bold' },
   saveBtn: { marginTop: 24, borderRadius: 8 },
+  emailRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  emailInput: { flex: 1 },
+  linkBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: 'rgba(67,160,71,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(67,160,71,0.3)',
+    marginBottom: 8,
+  },
+  linkBadgeWarn: {
+    backgroundColor: 'rgba(255,152,0,0.1)',
+    borderColor: 'rgba(255,152,0,0.3)',
+  },
+  linkBadgeText: { color: '#43A047', fontSize: 12, flex: 1 },
+  emailHint: {
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginBottom: 8,
+    lineHeight: 18,
+  },
 });
