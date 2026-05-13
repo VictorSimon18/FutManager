@@ -9,6 +9,7 @@ import { AuthContext } from '../context/AuthContext';
 import LoginScreen from '../screens/LoginScreen';
 import RoleSelectionScreen from '../screens/RoleSelectionScreen';
 import HomeCoachScreen from '../screens/HomeCoachScreen';
+import CoachTeamSelectionScreen from '../screens/coach/CoachTeamSelectionScreen';
 
 // Pantallas del entrenador
 import PlayerListScreen from '../screens/coach/PlayerListScreen';
@@ -221,7 +222,7 @@ const coachHeaderOptions = {
 };
 
 export default function AppNavigator() {
-  const { isAuthenticated, role, isLoading } = useContext(AuthContext);
+  const { isAuthenticated, role, equipoId, isLoading } = useContext(AuthContext);
 
   // Mientras se restaura la sesión, mostrar un indicador de carga
   if (isLoading) {
@@ -257,6 +258,18 @@ export default function AppNavigator() {
               title: 'Selecciona tu rol',
               headerBackVisible: false,
               headerRight: () => <LogoutButton />,
+            }}
+          />
+        ) : role === 'coach' && !equipoId ? (
+          // ── Entrenador sin equipo seleccionado → selección de equipo ─────────
+          <Stack.Screen
+            name="CoachTeamSelection"
+            component={CoachTeamSelectionScreen}
+            options={{
+              title: 'Mis Equipos',
+              ...coachHeaderOptions,
+              headerBackVisible: false,
+              headerRight: () => <HeaderButtons />,
             }}
           />
         ) : role === 'coach' ? (

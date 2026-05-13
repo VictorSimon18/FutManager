@@ -66,11 +66,11 @@ export async function updateTeam(id, data) {
     const db = await getDatabase();
     const result = await db.runAsync(
       `UPDATE equipos
-       SET nombre = COALESCE(?, nombre),
-           categoria = COALESCE(?, categoria),
-           modalidad = COALESCE(?, modalidad),
-           temporada = COALESCE(?, temporada),
-           escudo_url = COALESCE(?, escudo_url)
+       SET nombre     = ?,
+           categoria  = ?,
+           modalidad  = ?,
+           temporada  = ?,
+           escudo_url = ?
        WHERE id = ?`,
       [data.nombre ?? null, data.categoria ?? null, data.modalidad ?? null,
        data.temporada ?? null, data.escudo_url ?? null, id]
@@ -79,6 +79,54 @@ export async function updateTeam(id, data) {
     return result.changes;
   } catch (error) {
     console.error('[teamService] Error al actualizar equipo:', error);
+    throw error;
+  }
+}
+
+/**
+ * Obtiene todos los equipos asociados a un entrenador (usuario).
+ * @param {number} userId
+ * @returns {Promise<object[]>}
+ */
+export async function getTeamsByCoachUserId(userId) {
+  try {
+    const db = await getDatabase();
+    return await db.getAllAsync(
+      `SELECT e.*
+       FROM equipos e
+       INNER JOIN entrenadores en ON en.equipo_id = e.id
+       WHERE en.usuario_id = ?
+       ORDER BY e.nombre ASC`,
+      [userId]
+    );
+  } catch (error) {
+    console.error('[teamService] Error al obtener equipos del entrenador:', error);
+    throw error;
+  }
+}
+
+/**
+ * Vincula un entrenador (usuario) a un equipo existente.
+ * Si ya existe el vínculo, devuelve el id existente sin duplicar.
+ * @param {number} userId
+ * @param {number} equipoId
+ * @returns {Promise<number>} ID del registro en entrenadores
+ */
+export async function linkCoachToTeam(userId, equipoId) {
+  try {
+    const db = await getDatabase();
+    const existing = await db.getFirstAsync(
+      'SELECT id FROM entrenadores WHERE usuario_id = ? AND equipo_id = ?',
+      [userId, equipoId]
+    );
+    if (existing) return existing.id;
+    const result = await db.runAsync(
+      'INSERT INTO entrenadores (usuario_id, equipo_id) VALUES (?, ?)',
+      [userId, equipoId]
+    );
+    return result.lastInsertRowId;
+  } catch (error) {
+    console.error('[teamService] Error al vincular entrenador con equipo:', error);
     throw error;
   }
 }
