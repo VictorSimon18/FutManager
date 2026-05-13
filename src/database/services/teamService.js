@@ -84,6 +84,28 @@ export async function updateTeam(id, data) {
 }
 
 /**
+ * Obtiene todos los equipos en los que un jugador (usuario) tiene ficha activa.
+ * @param {number} userId
+ * @returns {Promise<object[]>}
+ */
+export async function getTeamsByPlayerUserId(userId) {
+  try {
+    const db = await getDatabase();
+    return await db.getAllAsync(
+      `SELECT e.*
+       FROM equipos e
+       INNER JOIN jugadores j ON j.equipo_id = e.id
+       WHERE j.usuario_id = ? AND j.activo = 1
+       ORDER BY e.nombre ASC`,
+      [userId]
+    );
+  } catch (error) {
+    console.error('[teamService] Error al obtener equipos del jugador:', error);
+    throw error;
+  }
+}
+
+/**
  * Obtiene todos los equipos asociados a un entrenador (usuario).
  * @param {number} userId
  * @returns {Promise<object[]>}

@@ -55,6 +55,12 @@ export function AuthProvider({ children }) {
           [userId]
         );
       } else if (roleId === 'player') {
+        if (equipoId) {
+          return await db.getFirstAsync(
+            'SELECT * FROM jugadores WHERE usuario_id = ? AND equipo_id = ? AND activo = 1',
+            [userId, equipoId]
+          );
+        }
         return await db.getFirstAsync(
           'SELECT * FROM jugadores WHERE usuario_id = ? AND activo = 1',
           [userId]
@@ -178,14 +184,14 @@ export function AuthProvider({ children }) {
     try {
       if (!user) throw new Error('No hay sesión activa.');
 
-      // El entrenador elige equipo en la pantalla siguiente — solo guardamos el rol
-      if (roleId === 'coach') {
-        setRole('coach');
+      // Entrenador y jugador eligen equipo en la pantalla siguiente
+      if (roleId === 'coach' || roleId === 'player') {
+        setRole(roleId);
         setEquipoId(null);
         setRoleData(null);
         await SecureStore.setItemAsync(
           STORAGE_KEY,
-          JSON.stringify({ userId: user.id, role: 'coach' })
+          JSON.stringify({ userId: user.id, role: roleId })
         );
         return;
       }
@@ -224,6 +230,31 @@ export function AuthProvider({ children }) {
       );
     } catch (error) {
       console.error('[AuthContext] Error al seleccionar rol:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Selecciona el equipo activo para el jugador y completa el acceso al panel.
+   * @param {number} teamId
+   */
+  async function selectPlayerTeam(teamId) {
+    try {
+      if (!user) throw new Error('No hay sesión activa.');
+      const db = await getDatabase();
+      const rd = await db.getFirstAsync(
+        'SELECT * FROM jugadores WHERE usuario_id = ? AND equipo_id = ? AND activo = 1',
+        [user.id, teamId]
+      );
+      if (!rd) throw new Error('No tienes ficha activa en este equipo.');
+      setEquipoId(teamId);
+      setRoleData(rd);
+      await SecureStore.setItemAsync(
+        STORAGE_KEY,
+        JSON.stringify({ userId: user.id, role: 'player', equipoId: teamId })
+      );
+    } catch (error) {
+      console.error('[AuthContext] Error al seleccionar equipo del jugador:', error);
       throw error;
     }
   }
@@ -309,6 +340,7 @@ export function AuthProvider({ children }) {
         register,
         selectRole,
         selectTeam,
+        selectPlayerTeam,
         changeRole,
         logout,
       }}

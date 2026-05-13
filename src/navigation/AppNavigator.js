@@ -10,6 +10,7 @@ import LoginScreen from '../screens/LoginScreen';
 import RoleSelectionScreen from '../screens/RoleSelectionScreen';
 import HomeCoachScreen from '../screens/HomeCoachScreen';
 import CoachTeamSelectionScreen from '../screens/coach/CoachTeamSelectionScreen';
+import PlayerTeamSelectionScreen from '../screens/player/PlayerTeamSelectionScreen';
 
 // Pantallas del entrenador
 import PlayerListScreen from '../screens/coach/PlayerListScreen';
@@ -365,6 +366,20 @@ export default function AppNavigator() {
               }}
             />
           </>
+        ) : role === 'player' && !equipoId ? (
+          // ── Jugador sin equipo seleccionado → selección de equipo ────────────
+          <Stack.Screen
+            name="PlayerTeamSelection"
+            component={PlayerTeamSelectionScreen}
+            options={{
+              title: 'Mis Equipos',
+              headerStyle: { backgroundColor: '#00AA13' },
+              headerTintColor: '#fff',
+              headerTitleStyle: { fontWeight: 'bold' },
+              headerBackVisible: false,
+              headerRight: () => <HeaderButtons />,
+            }}
+          />
         ) : role === 'player' ? (
           // ── Rol jugador (Bottom Tabs) ────────────────────────────────────────
           <Stack.Screen
