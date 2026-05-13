@@ -34,19 +34,33 @@ export function AuthProvider({ children }) {
 
   /**
    * Obtiene los datos específicos del rol del usuario desde la BD.
+   * Para 'coach', si se pasa equipoId busca el registro concreto de ese equipo.
    * @param {string} roleId - 'coach' | 'player' | 'fan'
    * @param {number} userId
+   * @param {number|null} equipoId
    * @returns {Promise<object|null>}
    */
-  async function fetchRoleData(roleId, userId) {
+  async function fetchRoleData(roleId, userId, equipoId = null) {
     try {
       const db = await getDatabase();
       if (roleId === 'coach') {
+        if (equipoId) {
+          return await db.getFirstAsync(
+            'SELECT * FROM entrenadores WHERE usuario_id = ? AND equipo_id = ?',
+            [userId, equipoId]
+          );
+        }
         return await db.getFirstAsync(
           'SELECT * FROM entrenadores WHERE usuario_id = ?',
           [userId]
         );
       } else if (roleId === 'player') {
+        if (equipoId) {
+          return await db.getFirstAsync(
+            'SELECT * FROM jugadores WHERE usuario_id = ? AND equipo_id = ? AND activo = 1',
+            [userId, equipoId]
+          );
+        }
         return await db.getFirstAsync(
           'SELECT * FROM jugadores WHERE usuario_id = ? AND activo = 1',
           [userId]
@@ -75,11 +89,14 @@ export function AuthProvider({ children }) {
         const dbUser = await getUserById(session.userId);
         if (dbUser) {
           setUser(dbUser);
-          if (session.role && session.equipoId) {
+          if (session.role) {
             setRole(session.role);
-            setEquipoId(session.equipoId);
-            const rd = await fetchRoleData(session.role, dbUser.id);
-            setRoleData(rd);
+            if (session.equipoId) {
+              setEquipoId(session.equipoId);
+              const rd = await fetchRoleData(session.role, dbUser.id, session.equipoId);
+              setRoleData(rd);
+            }
+            // Si es coach sin equipoId guardado, quedará en la pantalla de selección de equipo
           }
         } else {
           // El usuario ya no existe en la BD; limpiar sesión guardada
@@ -167,11 +184,22 @@ export function AuthProvider({ children }) {
     try {
       if (!user) throw new Error('No hay sesión activa.');
 
+      // Entrenador y jugador eligen equipo en la pantalla siguiente
+      if (roleId === 'coach' || roleId === 'player') {
+        setRole(roleId);
+        setEquipoId(null);
+        setRoleData(null);
+        await SecureStore.setItemAsync(
+          STORAGE_KEY,
+          JSON.stringify({ userId: user.id, role: roleId })
+        );
+        return;
+      }
+
       const db = await getDatabase();
       let rd = await fetchRoleData(roleId, user.id);
 
       if (!rd) {
-        // Determinar el equipo al que asignar (prototipo: primer equipo disponible)
         let finalEquipoId = targetEquipoId;
         if (!finalEquipoId) {
           const primerEquipo = await db.getFirstAsync(
@@ -181,12 +209,7 @@ export function AuthProvider({ children }) {
         }
         if (!finalEquipoId) throw new Error('No hay equipos disponibles en la base de datos.');
 
-        if (roleId === 'coach') {
-          await db.runAsync(
-            'INSERT INTO entrenadores (usuario_id, equipo_id) VALUES (?, ?)',
-            [user.id, finalEquipoId]
-          );
-        } else if (roleId === 'fan') {
+        if (roleId === 'fan') {
           await db.runAsync(
             'INSERT INTO aficionados (usuario_id, equipo_id) VALUES (?, ?)',
             [user.id, finalEquipoId]
@@ -201,13 +224,71 @@ export function AuthProvider({ children }) {
       setEquipoId(finalEquipoId);
       setRoleData(rd);
 
-      // Persistir la sesión completa (userId + rol + equipo)
       await SecureStore.setItemAsync(
         STORAGE_KEY,
         JSON.stringify({ userId: user.id, role: roleId, equipoId: finalEquipoId })
       );
     } catch (error) {
       console.error('[AuthContext] Error al seleccionar rol:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Selecciona el equipo activo para el jugador y completa el acceso al panel.
+   * @param {number} teamId
+   */
+  async function selectPlayerTeam(teamId) {
+    try {
+      if (!user) throw new Error('No hay sesión activa.');
+      const db = await getDatabase();
+      const rd = await db.getFirstAsync(
+        'SELECT * FROM jugadores WHERE usuario_id = ? AND equipo_id = ? AND activo = 1',
+        [user.id, teamId]
+      );
+      if (!rd) throw new Error('No tienes ficha activa en este equipo.');
+      setEquipoId(teamId);
+      setRoleData(rd);
+      await SecureStore.setItemAsync(
+        STORAGE_KEY,
+        JSON.stringify({ userId: user.id, role: 'player', equipoId: teamId })
+      );
+    } catch (error) {
+      console.error('[AuthContext] Error al seleccionar equipo del jugador:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Selecciona el equipo activo para el entrenador y completa el acceso al panel.
+   * @param {number} teamId
+   */
+  async function selectTeam(teamId) {
+    try {
+      if (!user) throw new Error('No hay sesión activa.');
+      const db = await getDatabase();
+      let rd = await db.getFirstAsync(
+        'SELECT * FROM entrenadores WHERE usuario_id = ? AND equipo_id = ?',
+        [user.id, teamId]
+      );
+      if (!rd) {
+        await db.runAsync(
+          'INSERT INTO entrenadores (usuario_id, equipo_id) VALUES (?, ?)',
+          [user.id, teamId]
+        );
+        rd = await db.getFirstAsync(
+          'SELECT * FROM entrenadores WHERE usuario_id = ? AND equipo_id = ?',
+          [user.id, teamId]
+        );
+      }
+      setEquipoId(teamId);
+      setRoleData(rd);
+      await SecureStore.setItemAsync(
+        STORAGE_KEY,
+        JSON.stringify({ userId: user.id, role: 'coach', equipoId: teamId })
+      );
+    } catch (error) {
+      console.error('[AuthContext] Error al seleccionar equipo:', error);
       throw error;
     }
   }
@@ -258,6 +339,8 @@ export function AuthProvider({ children }) {
         login,
         register,
         selectRole,
+        selectTeam,
+        selectPlayerTeam,
         changeRole,
         logout,
       }}
