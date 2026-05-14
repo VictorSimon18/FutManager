@@ -21,12 +21,13 @@ const GLASS_BG = 'rgba(255,255,255,0.08)';
 const GLASS_BORDER = 'rgba(255,255,255,0.13)';
 const DIALOG_STYLE = { borderRadius: 8 };
 
-// Foco blanco: borde + label activo en blanco
+// Tema para inputs dentro de Dialog (fondo blanco): colores oscuros para contrastar
 const INPUT_THEME = {
   colors: {
-    primary: '#FFFFFF',
-    onSurfaceVariant: '#FFFFFF',
-    outline: 'rgba(255,255,255,0.15)',
+    primary: '#105E7A',
+    onSurfaceVariant: 'rgba(0,0,0,0.5)',
+    onSurface: '#1a1a1a',
+    outline: 'rgba(0,0,0,0.25)',
   },
 };
 
@@ -428,6 +429,7 @@ export default function MatchDetailScreen({ route, navigation }) {
                   onChangeText={setGolesFavor}
                   mode="outlined"
                   theme={INPUT_THEME}
+                  textColor="#333333"
                   keyboardType="numeric"
                   style={styles.goalInput}
                 />
@@ -438,6 +440,7 @@ export default function MatchDetailScreen({ route, navigation }) {
                   onChangeText={setGolesContra}
                   mode="outlined"
                   theme={INPUT_THEME}
+                  textColor="#333333"
                   keyboardType="numeric"
                   style={styles.goalInput}
                 />
@@ -498,35 +501,35 @@ export default function MatchDetailScreen({ route, navigation }) {
                   <Switch value={stTitular} onValueChange={setStTitular} trackColor={{ true: '#105E7A', false: '#BDBDBD' }} thumbColor="#fff" />
                 </View>
                 <View style={styles.statsInputRow}>
-                  <TextInput label="Minutos" value={stMinutos} onChangeText={setStMinutos} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 90" />
-                  <TextInput label="Pases clave" value={stPasesClave} onChangeText={setStPasesClave} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 2" />
-                  <TextInput label="Valoración" value={stValoracion} onChangeText={setStValoracion} mode="outlined" keyboardType="decimal-pad" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 7.5" />
+                  <TextInput label="Minutos" value={stMinutos} onChangeText={setStMinutos} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} textColor="#333333" placeholderTextColor="rgba(0,0,0,0.38)" style={styles.miniInput} placeholder="Ej: 90" />
+                  <TextInput label="Pases clave" value={stPasesClave} onChangeText={setStPasesClave} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} textColor="#333333" placeholderTextColor="rgba(0,0,0,0.38)" style={styles.miniInput} placeholder="Ej: 2" />
+                  <TextInput label="Valoración" value={stValoracion} onChangeText={setStValoracion} mode="outlined" keyboardType="decimal-pad" theme={INPUT_THEME} textColor="#333333" placeholderTextColor="rgba(0,0,0,0.38)" style={styles.miniInput} placeholder="Ej: 7.5" />
                 </View>
 
                 <StatsSection title="ATAQUE" />
                 <View style={styles.statsInputRow}>
-                  <TextInput label="Goles" value={stGoles} onChangeText={setStGoles} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 0" />
-                  <TextInput label="Asistencias" value={stAsistencias} onChangeText={setStAsistencias} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 1" />
+                  <TextInput label="Goles" value={stGoles} onChangeText={setStGoles} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} textColor="#333333" placeholderTextColor="rgba(0,0,0,0.38)" style={styles.miniInput} placeholder="Ej: 0" />
+                  <TextInput label="Asistencias" value={stAsistencias} onChangeText={setStAsistencias} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} textColor="#333333" placeholderTextColor="rgba(0,0,0,0.38)" style={styles.miniInput} placeholder="Ej: 1" />
                 </View>
                 <View style={[styles.statsInputRow, { marginTop: 8 }]}>
-                  <TextInput label="Tiros puerta" value={stTirosPuerta} onChangeText={setStTirosPuerta} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 3" />
-                  <TextInput label="Tiros fuera" value={stTirosFuera} onChangeText={setStTirosFuera} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 1" />
-                  <TextInput label="Fuera de juego" value={stFuerasJuego} onChangeText={setStFuerasJuego} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 0" />
+                  <TextInput label="Tiros puerta" value={stTirosPuerta} onChangeText={setStTirosPuerta} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} textColor="#333333" placeholderTextColor="rgba(0,0,0,0.38)" style={styles.miniInput} placeholder="Ej: 3" />
+                  <TextInput label="Tiros fuera" value={stTirosFuera} onChangeText={setStTirosFuera} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} textColor="#333333" placeholderTextColor="rgba(0,0,0,0.38)" style={styles.miniInput} placeholder="Ej: 1" />
+                  <TextInput label="Fuera de juego" value={stFuerasJuego} onChangeText={setStFuerasJuego} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} textColor="#333333" placeholderTextColor="rgba(0,0,0,0.38)" style={styles.miniInput} placeholder="Ej: 0" />
                 </View>
 
                 <StatsSection title="DEFENSA" />
                 <View style={styles.statsInputRow}>
-                  <TextInput label="Entradas" value={stEntradas} onChangeText={setStEntradas} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 2" />
-                  <TextInput label="Despejes" value={stDespejes} onChangeText={setStDespejes} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 4" />
+                  <TextInput label="Entradas" value={stEntradas} onChangeText={setStEntradas} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} textColor="#333333" placeholderTextColor="rgba(0,0,0,0.38)" style={styles.miniInput} placeholder="Ej: 2" />
+                  <TextInput label="Despejes" value={stDespejes} onChangeText={setStDespejes} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} textColor="#333333" placeholderTextColor="rgba(0,0,0,0.38)" style={styles.miniInput} placeholder="Ej: 4" />
                   {isPortero && (
-                    <TextInput label="Paradas" value={stParadas} onChangeText={setStParadas} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 5" />
+                    <TextInput label="Paradas" value={stParadas} onChangeText={setStParadas} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} textColor="#333333" placeholderTextColor="rgba(0,0,0,0.38)" style={styles.miniInput} placeholder="Ej: 5" />
                   )}
                 </View>
 
                 <StatsSection title="DISCIPLINA" />
                 <View style={styles.statsInputRow}>
-                  <TextInput label="Amarillas" value={stAmarillas} onChangeText={setStAmarillas} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 0" />
-                  <TextInput label="Rojas" value={stRojas} onChangeText={setStRojas} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 0" />
+                  <TextInput label="Amarillas" value={stAmarillas} onChangeText={setStAmarillas} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} textColor="#333333" placeholderTextColor="rgba(0,0,0,0.38)" style={styles.miniInput} placeholder="Ej: 0" />
+                  <TextInput label="Rojas" value={stRojas} onChangeText={setStRojas} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} textColor="#333333" placeholderTextColor="rgba(0,0,0,0.38)" style={styles.miniInput} placeholder="Ej: 0" />
                 </View>
                 {amarillasNum >= 2 && (
                   <Text variant="bodySmall" style={styles.warningText}>
@@ -534,8 +537,8 @@ export default function MatchDetailScreen({ route, navigation }) {
                   </Text>
                 )}
                 <View style={[styles.statsInputRow, { marginTop: 8 }]}>
-                  <TextInput label="Faltas comet." value={stFaltasCometidas} onChangeText={setStFaltasCometidas} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 2" />
-                  <TextInput label="Faltas recib." value={stFaltasRecibidas} onChangeText={setStFaltasRecibidas} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} style={styles.miniInput} placeholder="Ej: 3" />
+                  <TextInput label="Faltas comet." value={stFaltasCometidas} onChangeText={setStFaltasCometidas} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} textColor="#333333" placeholderTextColor="rgba(0,0,0,0.38)" style={styles.miniInput} placeholder="Ej: 2" />
+                  <TextInput label="Faltas recib." value={stFaltasRecibidas} onChangeText={setStFaltasRecibidas} mode="outlined" keyboardType="numeric" theme={INPUT_THEME} textColor="#333333" placeholderTextColor="rgba(0,0,0,0.38)" style={styles.miniInput} placeholder="Ej: 3" />
                 </View>
               </ScrollView>
             </Dialog.ScrollArea>
