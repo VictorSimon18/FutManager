@@ -338,15 +338,26 @@ export default function MatchDetailScreen({ route, navigation }) {
         </View>
 
         {!isFinished && (
-          <Button
-            mode="contained"
-            icon="scoreboard"
-            onPress={() => setResultModal(true)}
-            buttonColor="#105E7A"
-            style={styles.actionBtn}
-          >
-            Registrar resultado
-          </Button>
+          <>
+            <Button
+              mode="contained"
+              icon="broadcast"
+              onPress={() => navigation.navigate('LiveMatchSetup', { matchId, rival: match.rival })}
+              buttonColor="#E65100"
+              style={[styles.actionBtn, { marginBottom: 8 }]}
+            >
+              Iniciar en directo
+            </Button>
+            <Button
+              mode="outlined"
+              icon="scoreboard"
+              onPress={() => setResultModal(true)}
+              textColor="#105E7A"
+              style={styles.actionBtn}
+            >
+              Registrar resultado
+            </Button>
+          </>
         )}
 
         {isFinished && (

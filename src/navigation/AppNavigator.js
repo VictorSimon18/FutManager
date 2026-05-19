@@ -24,6 +24,9 @@ import TrainingFormScreen from '../screens/coach/TrainingFormScreen';
 import TrainingDetailScreen from '../screens/coach/TrainingDetailScreen';
 import MapScreen from '../screens/coach/MapScreen';
 import TacticalBoardScreen from '../screens/coach/TacticalBoardScreen';
+import LiveMatchSetupScreen from '../screens/coach/LiveMatchSetupScreen';
+import LiveMatchScreen from '../screens/coach/LiveMatchScreen';
+import LiveMatchSummaryScreen from '../screens/coach/LiveMatchSummaryScreen';
 
 // Pantallas del jugador (tab navigator)
 import PlayerDashboardScreen from '../screens/player/PlayerDashboardScreen';
@@ -363,6 +366,39 @@ export default function AppNavigator() {
                 headerStyle: { backgroundColor: '#FF6F00' },
                 headerTintColor: '#fff',
                 headerTitleStyle: { fontWeight: 'bold' },
+              }}
+            />
+            {/* Partido en directo */}
+            <Stack.Screen
+              name="LiveMatchSetup"
+              component={LiveMatchSetupScreen}
+              options={{
+                title: 'Alineación inicial',
+                headerStyle: { backgroundColor: '#E65100' },
+                headerTintColor: '#fff',
+                headerTitleStyle: { fontWeight: 'bold' },
+              }}
+            />
+            <Stack.Screen
+              name="LiveMatch"
+              component={LiveMatchScreen}
+              options={{
+                title: 'Partido en directo',
+                headerStyle: { backgroundColor: '#E65100' },
+                headerTintColor: '#fff',
+                headerTitleStyle: { fontWeight: 'bold' },
+                headerBackVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="LiveMatchSummary"
+              component={LiveMatchSummaryScreen}
+              options={{
+                title: 'Resumen del partido',
+                headerStyle: { backgroundColor: '#4A148C' },
+                headerTintColor: '#fff',
+                headerTitleStyle: { fontWeight: 'bold' },
+                headerBackVisible: false,
               }}
             />
           </>
