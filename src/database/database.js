@@ -208,5 +208,19 @@ export async function initDatabase() {
     }
   }
 
+  // Tabla de estado del partido en directo (persistencia si la app se cierra)
+  try {
+    await database.execAsync(`
+      CREATE TABLE IF NOT EXISTS live_match_state (
+        match_id    INTEGER PRIMARY KEY,
+        state_json  TEXT NOT NULL,
+        updated_at  TEXT DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('[DB] Tabla live_match_state verificada.');
+  } catch (e) {
+    console.error('[DB] Error creando live_match_state:', e);
+  }
+
   console.log('[DB] Base de datos inicializada correctamente.');
 }
