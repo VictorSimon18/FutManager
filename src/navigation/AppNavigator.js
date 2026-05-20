@@ -2,7 +2,6 @@ import React, { useContext } from 'react';
 import { View, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 
 import { AuthContext } from '../context/AuthContext';
@@ -43,72 +42,8 @@ import FanSquadScreen from '../screens/fan/FanSquadScreen';
 import FanStandingsScreen from '../screens/fan/FanStandingsScreen';
 
 const Stack = createNativeStackNavigator();
-const FanTab = createBottomTabNavigator();
-
 const PLAYER_COLOR = '#00AA13';
 const FAN_COLOR = '#1E88E5';
-
-/**
- * Bottom Tab Navigator para el rol aficionado.
- * Cuatro tabs: Inicio, Partidos, Plantilla, Clasificación.
- */
-function FanTabNavigator() {
-  return (
-    <FanTab.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: FAN_COLOR },
-        headerTintColor: '#fff',
-        headerTitleStyle: { fontWeight: 'bold' },
-        tabBarStyle: {
-          backgroundColor: '#0f2027',
-          borderTopColor: 'rgba(255,255,255,0.1)',
-          borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 4,
-        },
-        tabBarActiveTintColor: FAN_COLOR,
-        tabBarInactiveTintColor: 'rgba(255,255,255,0.4)',
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-      }}
-    >
-      <FanTab.Screen
-        name="FanDashboard"
-        component={FanDashboardScreen}
-        options={{
-          title: 'Inicio',
-          tabBarIcon: ({ color, size }) => <Icon name="home" size={size} color={color} />,
-          headerRight: () => <HeaderButtons />,
-        }}
-      />
-      <FanTab.Screen
-        name="FanMatches"
-        component={FanMatchesScreen}
-        options={{
-          title: 'Partidos',
-          tabBarIcon: ({ color, size }) => <Icon name="soccer" size={size} color={color} />,
-        }}
-      />
-      <FanTab.Screen
-        name="FanSquad"
-        component={FanSquadScreen}
-        options={{
-          title: 'Plantilla',
-          tabBarIcon: ({ color, size }) => <Icon name="account-group" size={size} color={color} />,
-        }}
-      />
-      <FanTab.Screen
-        name="FanStandings"
-        component={FanStandingsScreen}
-        options={{
-          title: 'Clasificación',
-          tabBarIcon: ({ color, size }) => <Icon name="trophy" size={size} color={color} />,
-        }}
-      />
-    </FanTab.Navigator>
-  );
-}
-
 const COACH_COLOR = '#105E7A';
 
 /**
@@ -159,6 +94,13 @@ const coachHeaderOptions = {
 /** Opciones de header comunes para el stack del jugador */
 const playerHeaderOptions = {
   headerStyle: { backgroundColor: PLAYER_COLOR },
+  headerTintColor: '#fff',
+  headerTitleStyle: { fontWeight: 'bold' },
+};
+
+/** Opciones de header comunes para el stack del aficionado */
+const fanHeaderOptions = {
+  headerStyle: { backgroundColor: FAN_COLOR },
   headerTintColor: '#fff',
   headerTitleStyle: { fontWeight: 'bold' },
 };
@@ -395,12 +337,34 @@ export default function AppNavigator() {
             />
           </>
         ) : (
-          // ── Rol aficionado (Bottom Tabs) ─────────────────────────────────────
-          <Stack.Screen
-            name="FanTabs"
-            component={FanTabNavigator}
-            options={{ headerShown: false, headerBackVisible: false }}
-          />
+          // ── Stack del aficionado ─────────────────────────────────────────────
+          <>
+            <Stack.Screen
+              name="FanDashboard"
+              component={FanDashboardScreen}
+              options={{
+                title: 'Panel del Aficionado',
+                ...fanHeaderOptions,
+                headerBackVisible: false,
+                headerRight: () => <HeaderButtons />,
+              }}
+            />
+            <Stack.Screen
+              name="FanMatches"
+              component={FanMatchesScreen}
+              options={{ title: 'Partidos', ...fanHeaderOptions }}
+            />
+            <Stack.Screen
+              name="FanSquad"
+              component={FanSquadScreen}
+              options={{ title: 'Plantilla', ...fanHeaderOptions }}
+            />
+            <Stack.Screen
+              name="FanStandings"
+              component={FanStandingsScreen}
+              options={{ title: 'Clasificación', ...fanHeaderOptions }}
+            />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>
