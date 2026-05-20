@@ -341,6 +341,19 @@ export default function HomeCoachScreen({ navigation }) {
                   </Text>
                 </View>
               </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionCard}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('TeamStats')}
+              >
+                <View style={styles.actionSurface}>
+                  <Icon name="chart-areaspline" size={40} color="#105E7A" />
+                  <Text variant="bodyMedium" style={styles.actionText}>
+                    Estadísticas
+                  </Text>
+                </View>
+              </TouchableOpacity>
             </View>
           </>
         )}

@@ -342,7 +342,7 @@ export default function MatchDetailScreen({ route, navigation }) {
             <Button
               mode="contained"
               icon="broadcast"
-              onPress={() => navigation.navigate('LiveMatchSetup', { matchId, rival: match.rival })}
+              onPress={() => navigation.navigate('LiveMatchSetup', { matchId, rival: match.rival, modalidad: match.modalidad })}
               buttonColor="#E65100"
               style={[styles.actionBtn, { marginBottom: 8 }]}
             >

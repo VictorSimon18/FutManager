@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
-import { View, StyleSheet, ScrollView, Alert, TouchableOpacity, Image, ActionSheetIOS, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, TouchableOpacity, Image, ActionSheetIOS, Platform, useWindowDimensions } from 'react-native';
 import { Text, Avatar, Button, Divider, ActivityIndicator, ProgressBar } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -25,6 +25,7 @@ function matchResult(gF, gC) {
 export default function PlayerDetailScreen({ route, navigation }) {
   const { playerId } = route.params;
   const { equipoId } = useContext(AuthContext);
+  const { width } = useWindowDimensions();
 
   const [player, setPlayer] = useState(null);
   const [seasonStats, setSeasonStats] = useState(null);
@@ -32,6 +33,7 @@ export default function PlayerDetailScreen({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [showAllMatches, setShowAllMatches] = useState(false);
 
   const { attendance } = usePlayerAttendance(playerId, equipoId);
 
@@ -246,6 +248,14 @@ export default function PlayerDetailScreen({ route, navigation }) {
           </View>
         </View>
 
+        {/* Gráfico de rendimiento */}
+        {matchStats.length > 1 && (
+          <View style={styles.card}>
+            <Text variant="titleSmall" style={styles.sectionTitle}>Rendimiento por partido</Text>
+            <PerformanceChart matchStats={matchStats} screenWidth={width} />
+          </View>
+        )}
+
         {/* Asistencia a entrenamientos */}
         <View style={styles.card}>
           <Text variant="titleSmall" style={styles.sectionTitle}>Asistencia a entrenamientos</Text>
@@ -278,8 +288,10 @@ export default function PlayerDetailScreen({ route, navigation }) {
         {/* Historial de partidos */}
         {matchStats.length > 0 && (
           <View style={styles.card}>
-            <Text variant="titleSmall" style={styles.sectionTitle}>Últimos partidos</Text>
-            {matchStats.slice(0, 5).map(stat => {
+            <Text variant="titleSmall" style={styles.sectionTitle}>
+              Historial de partidos ({matchStats.length})
+            </Text>
+            {(showAllMatches ? matchStats : matchStats.slice(0, 5)).map(stat => {
               const res = matchResult(stat.goles_favor, stat.goles_contra);
               const mostrarRoja = stat.tarjetas_rojas > 0 || stat.tarjetas_amarillas >= 2;
               return (
@@ -305,6 +317,21 @@ export default function PlayerDetailScreen({ route, navigation }) {
                 </View>
               );
             })}
+            {matchStats.length > 5 && (
+              <TouchableOpacity
+                onPress={() => setShowAllMatches(v => !v)}
+                style={styles.showMoreBtn}
+              >
+                <Text style={styles.showMoreText}>
+                  {showAllMatches ? 'Ver menos' : `Ver todos (${matchStats.length})`}
+                </Text>
+                <Icon
+                  name={showAllMatches ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color="#105E7A"
+                />
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
@@ -405,4 +432,52 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: 12, marginTop: 4 },
   actionBtn: { flex: 1, borderRadius: 8 },
   deleteBtn: { borderColor: '#D32F2F' },
+  showMoreBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 4, paddingTop: 10,
+  },
+  showMoreText: { color: '#105E7A', fontSize: 13, fontWeight: '600' },
 });
+
+function PerformanceChart({ matchStats, screenWidth }) {
+  const data = matchStats.slice(0, 10).slice().reverse();
+  const maxVal = Math.max(1, ...data.map(m => Math.max(m.goles ?? 0, m.asistencias ?? 0)));
+  const BAR_MAX = 72;
+  const chartWidth = screenWidth - 64; // card padding
+  const colWidth = Math.floor(chartWidth / data.length);
+
+  return (
+    <View>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', height: BAR_MAX + 28 }}>
+        {data.map((m, i) => {
+          const golesH = Math.max(3, ((m.goles ?? 0) / maxVal) * BAR_MAX);
+          const assistH = Math.max(3, ((m.asistencias ?? 0) / maxVal) * BAR_MAX);
+          return (
+            <View key={i} style={{ width: colWidth, alignItems: 'center', justifyContent: 'flex-end' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 2 }}>
+                <View style={{ width: 8, height: golesH, backgroundColor: '#43A047', borderRadius: 3 }} />
+                <View style={{ width: 8, height: assistH, backgroundColor: '#26C6DA', borderRadius: 3 }} />
+              </View>
+              <Text
+                style={{ color: 'rgba(255,255,255,0.35)', fontSize: 8, marginTop: 5 }}
+                numberOfLines={1}
+              >
+                {(m.rival || '?').substring(0, 4).toUpperCase()}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+      <View style={{ flexDirection: 'row', gap: 16, marginTop: 4 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <View style={{ width: 10, height: 10, backgroundColor: '#43A047', borderRadius: 2 }} />
+          <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>Goles</Text>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <View style={{ width: 10, height: 10, backgroundColor: '#26C6DA', borderRadius: 2 }} />
+          <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>Asistencias</Text>
+        </View>
+      </View>
+    </View>
+  );
+}

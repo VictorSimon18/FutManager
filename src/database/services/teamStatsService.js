@@ -185,6 +185,66 @@ export async function getTeamOffensiveStats(equipoId) {
 }
 
 /**
+ * Rankings individuales de jugadores del equipo.
+ * @param {number} equipoId
+ * @returns {Promise<{ goleadores, asistentes, disciplina, minutos }>}
+ */
+export async function getPlayerRankings(equipoId) {
+  try {
+    const db = await getDatabase();
+
+    const goleadores = await db.getAllAsync(
+      `SELECT j.nombre, j.dorsal, j.posicion, SUM(e.goles) AS goles
+       FROM estadisticas_jugador e
+       INNER JOIN jugadores j ON e.jugador_id = j.id
+       INNER JOIN partidos p ON e.partido_id = p.id
+       WHERE p.equipo_id = ? AND e.goles > 0
+       GROUP BY e.jugador_id ORDER BY goles DESC LIMIT 5`,
+      [equipoId]
+    );
+
+    const asistentes = await db.getAllAsync(
+      `SELECT j.nombre, j.dorsal, j.posicion, SUM(e.asistencias) AS asistencias
+       FROM estadisticas_jugador e
+       INNER JOIN jugadores j ON e.jugador_id = j.id
+       INNER JOIN partidos p ON e.partido_id = p.id
+       WHERE p.equipo_id = ? AND e.asistencias > 0
+       GROUP BY e.jugador_id ORDER BY asistencias DESC LIMIT 5`,
+      [equipoId]
+    );
+
+    const disciplina = await db.getAllAsync(
+      `SELECT j.nombre, j.dorsal,
+              SUM(e.tarjetas_amarillas) AS amarillas,
+              SUM(e.tarjetas_rojas)     AS rojas
+       FROM estadisticas_jugador e
+       INNER JOIN jugadores j ON e.jugador_id = j.id
+       INNER JOIN partidos p ON e.partido_id = p.id
+       WHERE p.equipo_id = ? AND (e.tarjetas_amarillas > 0 OR e.tarjetas_rojas > 0)
+       GROUP BY e.jugador_id ORDER BY rojas DESC, amarillas DESC LIMIT 5`,
+      [equipoId]
+    );
+
+    const minutos = await db.getAllAsync(
+      `SELECT j.nombre, j.dorsal, j.posicion,
+              SUM(e.minutos_jugados) AS minutos,
+              COUNT(*) AS partidos
+       FROM estadisticas_jugador e
+       INNER JOIN jugadores j ON e.jugador_id = j.id
+       INNER JOIN partidos p ON e.partido_id = p.id
+       WHERE p.equipo_id = ?
+       GROUP BY e.jugador_id ORDER BY minutos DESC LIMIT 5`,
+      [equipoId]
+    );
+
+    return { goleadores, asistentes, disciplina, minutos };
+  } catch (error) {
+    console.error('[teamStatsService] Error al obtener rankings:', error);
+    throw error;
+  }
+}
+
+/**
  * Estadísticas defensivas del equipo.
  * @param {number} equipoId
  * @returns {Promise<object>}
