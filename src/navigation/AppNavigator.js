@@ -43,80 +43,10 @@ import FanSquadScreen from '../screens/fan/FanSquadScreen';
 import FanStandingsScreen from '../screens/fan/FanStandingsScreen';
 
 const Stack = createNativeStackNavigator();
-const PlayerTab = createBottomTabNavigator();
 const FanTab = createBottomTabNavigator();
 
 const PLAYER_COLOR = '#00AA13';
 const FAN_COLOR = '#1E88E5';
-
-/**
- * Bottom Tab Navigator para el rol jugador.
- * Cinco tabs: Inicio, Calendario, Estadísticas, Mi Equipo, Mi Perfil.
- */
-function PlayerTabNavigator() {
-  return (
-    <PlayerTab.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: PLAYER_COLOR },
-        headerTintColor: '#fff',
-        headerTitleStyle: { fontWeight: 'bold' },
-        tabBarStyle: {
-          backgroundColor: '#0f2027',
-          borderTopColor: 'rgba(255,255,255,0.1)',
-          borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 4,
-        },
-        tabBarActiveTintColor: PLAYER_COLOR,
-        tabBarInactiveTintColor: 'rgba(255,255,255,0.4)',
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-      }}
-    >
-      <PlayerTab.Screen
-        name="PlayerDashboard"
-        component={PlayerDashboardScreen}
-        options={{
-          title: 'Inicio',
-          tabBarIcon: ({ color, size }) => <Icon name="home" size={size} color={color} />,
-          headerRight: () => <HeaderButtons />,
-        }}
-      />
-      <PlayerTab.Screen
-        name="PlayerCalendar"
-        component={PlayerCalendarScreen}
-        options={{
-          title: 'Calendario',
-          tabBarIcon: ({ color, size }) => <Icon name="calendar" size={size} color={color} />,
-        }}
-      />
-      <PlayerTab.Screen
-        name="PlayerStats"
-        component={PlayerStatsScreen}
-        options={{
-          title: 'Estadísticas',
-          tabBarIcon: ({ color, size }) => <Icon name="chart-bar" size={size} color={color} />,
-        }}
-      />
-      <PlayerTab.Screen
-        name="PlayerTeam"
-        component={PlayerTeamScreen}
-        options={{
-          title: 'Mi Equipo',
-          tabBarIcon: ({ color, size }) => <Icon name="account-group" size={size} color={color} />,
-        }}
-      />
-      <PlayerTab.Screen
-        name="PlayerProfile"
-        component={PlayerProfileScreen}
-        options={{
-          title: 'Mi Perfil',
-          tabBarIcon: ({ color, size }) => <Icon name="account" size={size} color={color} />,
-        }}
-      />
-    </PlayerTab.Navigator>
-  );
-}
 
 /**
  * Bottom Tab Navigator para el rol aficionado.
@@ -222,6 +152,13 @@ function HeaderButtons() {
 /** Opciones de header comunes para el stack del entrenador */
 const coachHeaderOptions = {
   headerStyle: { backgroundColor: COACH_COLOR },
+  headerTintColor: '#fff',
+  headerTitleStyle: { fontWeight: 'bold' },
+};
+
+/** Opciones de header comunes para el stack del jugador */
+const playerHeaderOptions = {
+  headerStyle: { backgroundColor: PLAYER_COLOR },
   headerTintColor: '#fff',
   headerTitleStyle: { fontWeight: 'bold' },
 };
@@ -424,12 +361,39 @@ export default function AppNavigator() {
             }}
           />
         ) : role === 'player' ? (
-          // ── Rol jugador (Bottom Tabs) ────────────────────────────────────────
-          <Stack.Screen
-            name="PlayerTabs"
-            component={PlayerTabNavigator}
-            options={{ headerShown: false, headerBackVisible: false }}
-          />
+          // ── Stack del jugador ────────────────────────────────────────────────
+          <>
+            <Stack.Screen
+              name="PlayerDashboard"
+              component={PlayerDashboardScreen}
+              options={{
+                title: 'Panel del Jugador',
+                ...playerHeaderOptions,
+                headerBackVisible: false,
+                headerRight: () => <HeaderButtons />,
+              }}
+            />
+            <Stack.Screen
+              name="PlayerCalendar"
+              component={PlayerCalendarScreen}
+              options={{ title: 'Calendario', ...playerHeaderOptions }}
+            />
+            <Stack.Screen
+              name="PlayerStats"
+              component={PlayerStatsScreen}
+              options={{ title: 'Estadísticas', ...playerHeaderOptions }}
+            />
+            <Stack.Screen
+              name="PlayerTeam"
+              component={PlayerTeamScreen}
+              options={{ title: 'Mi Equipo', ...playerHeaderOptions }}
+            />
+            <Stack.Screen
+              name="PlayerProfile"
+              component={PlayerProfileScreen}
+              options={{ title: 'Mi Perfil', ...playerHeaderOptions }}
+            />
+          </>
         ) : (
           // ── Rol aficionado (Bottom Tabs) ─────────────────────────────────────
           <Stack.Screen
