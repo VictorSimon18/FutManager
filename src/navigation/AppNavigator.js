@@ -40,6 +40,7 @@ import FanDashboardScreen from '../screens/fan/FanDashboardScreen';
 import FanMatchesScreen from '../screens/fan/FanMatchesScreen';
 import FanSquadScreen from '../screens/fan/FanSquadScreen';
 import FanStandingsScreen from '../screens/fan/FanStandingsScreen';
+import FanTeamSearchScreen from '../screens/fan/FanTeamSearchScreen';
 
 const Stack = createNativeStackNavigator();
 const PLAYER_COLOR = '#00AA13';
@@ -78,6 +79,25 @@ function ChangeRoleButton() {
 function HeaderButtons() {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+      <ChangeRoleButton />
+      <LogoutButton />
+    </View>
+  );
+}
+
+function ChangeFanTeamButton() {
+  const { clearFanTeam } = useContext(AuthContext);
+  return (
+    <TouchableOpacity onPress={clearFanTeam} style={{ marginRight: 4, padding: 4 }}>
+      <Icon name="swap-horizontal" size={24} color="#fff" />
+    </TouchableOpacity>
+  );
+}
+
+function FanDashboardHeaderButtons() {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+      <ChangeFanTeamButton />
       <ChangeRoleButton />
       <LogoutButton />
     </View>
@@ -336,6 +356,18 @@ export default function AppNavigator() {
               options={{ title: 'Mi Perfil', ...playerHeaderOptions }}
             />
           </>
+        ) : role === 'fan' && !equipoId ? (
+          // ── Aficionado sin equipo → búsqueda de equipo ───────────────────────
+          <Stack.Screen
+            name="FanTeamSearch"
+            component={FanTeamSearchScreen}
+            options={{
+              title: '¿A qué equipo sigues?',
+              ...fanHeaderOptions,
+              headerBackVisible: false,
+              headerRight: () => <HeaderButtons />,
+            }}
+          />
         ) : (
           // ── Stack del aficionado ─────────────────────────────────────────────
           <>
@@ -346,7 +378,7 @@ export default function AppNavigator() {
                 title: 'Panel del Aficionado',
                 ...fanHeaderOptions,
                 headerBackVisible: false,
-                headerRight: () => <HeaderButtons />,
+                headerRight: () => <FanDashboardHeaderButtons />,
               }}
             />
             <Stack.Screen
