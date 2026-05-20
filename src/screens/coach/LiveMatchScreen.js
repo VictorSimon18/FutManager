@@ -188,15 +188,15 @@ export default function LiveMatchScreen({ route, navigation }) {
     Alert.alert('Finalizar partido', '¿Terminar el partido y ver el resumen?', [
       {
         text: 'Finalizar', onPress: () => {
-          setState(prev => ({ ...prev, timerRunning: false, phase: 'finished' }), () => {
-            navigation.replace('LiveMatchSummary', { matchId, rival, liveState: stateRef.current });
-          });
-          // Navigate immediately using ref
-          navigation.replace('LiveMatchSummary', {
-            matchId,
-            rival,
-            liveState: { ...stateRef.current, timerRunning: false, phase: 'finished' },
-          });
+          // Stop timer immediately via ref then navigate
+          if (timerRef.current) clearInterval(timerRef.current);
+          const finalState = {
+            ...stateRef.current,
+            timerRunning: false,
+            phase: 'finished',
+          };
+          saveLiveMatchState(matchId, finalState).catch(() => {});
+          navigation.replace('LiveMatchSummary', { matchId, rival, liveState: finalState });
         },
       },
       { text: 'Cancelar' },

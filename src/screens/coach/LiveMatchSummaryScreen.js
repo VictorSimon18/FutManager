@@ -138,11 +138,12 @@ export default function LiveMatchSummaryScreen({ route, navigation }) {
         '✅ Partido finalizado',
         `Resultado registrado: Nosotros ${ourGoals} - ${rivalGoals} ${rival}`
       );
-      navigation.navigate('MatchDetail', { matchId });
+      // pop() goes back to MatchDetail (LiveMatch and LiveMatchSetup were both replace'd,
+      // so LiveMatchSummary sits directly above MatchDetail in the stack)
+      navigation.pop();
     } catch (e) {
-      Alert.alert('Error', 'No se pudo guardar el partido: ' + e.message);
-    } finally {
       setSaving(false);
+      Alert.alert('Error', 'No se pudo guardar el partido: ' + e.message);
     }
   }
 
