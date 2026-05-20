@@ -184,8 +184,8 @@ export function AuthProvider({ children }) {
     try {
       if (!user) throw new Error('No hay sesión activa.');
 
-      // Entrenador y jugador eligen equipo en la pantalla siguiente
-      if (roleId === 'coach' || roleId === 'player') {
+      // Entrenador, jugador y aficionado eligen equipo en la pantalla siguiente
+      if (roleId === 'coach' || roleId === 'player' || roleId === 'fan') {
         setRole(roleId);
         setEquipoId(null);
         setRoleData(null);
@@ -231,6 +231,65 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error('[AuthContext] Error al seleccionar rol:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Selecciona el equipo que el aficionado quiere seguir.
+   * Inserta o actualiza el registro en aficionados y persiste en SecureStore.
+   * @param {number} teamId
+   */
+  async function selectFanTeam(teamId) {
+    try {
+      if (!user) throw new Error('No hay sesión activa.');
+      const db = await getDatabase();
+      const existing = await db.getFirstAsync(
+        'SELECT id FROM aficionados WHERE usuario_id = ?',
+        [user.id]
+      );
+      if (existing) {
+        await db.runAsync(
+          'UPDATE aficionados SET equipo_id = ? WHERE usuario_id = ?',
+          [teamId, user.id]
+        );
+      } else {
+        await db.runAsync(
+          'INSERT INTO aficionados (usuario_id, equipo_id) VALUES (?, ?)',
+          [user.id, teamId]
+        );
+      }
+      const rd = await db.getFirstAsync(
+        'SELECT * FROM aficionados WHERE usuario_id = ?',
+        [user.id]
+      );
+      setEquipoId(teamId);
+      setRoleData(rd);
+      await SecureStore.setItemAsync(
+        STORAGE_KEY,
+        JSON.stringify({ userId: user.id, role: 'fan', equipoId: teamId })
+      );
+    } catch (error) {
+      console.error('[AuthContext] Error al seleccionar equipo del aficionado:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Limpia el equipo del aficionado para volver a la pantalla de búsqueda.
+   */
+  async function clearFanTeam() {
+    try {
+      if (user) {
+        await SecureStore.setItemAsync(
+          STORAGE_KEY,
+          JSON.stringify({ userId: user.id, role: 'fan' })
+        );
+      }
+    } catch (error) {
+      console.error('[AuthContext] Error al limpiar equipo del aficionado:', error);
+    } finally {
+      setEquipoId(null);
+      setRoleData(null);
     }
   }
 
@@ -341,6 +400,8 @@ export function AuthProvider({ children }) {
         selectRole,
         selectTeam,
         selectPlayerTeam,
+        selectFanTeam,
+        clearFanTeam,
         changeRole,
         logout,
       }}
