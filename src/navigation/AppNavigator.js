@@ -27,6 +27,7 @@ import TacticalBoardScreen from '../screens/coach/TacticalBoardScreen';
 import LiveMatchSetupScreen from '../screens/coach/LiveMatchSetupScreen';
 import LiveMatchScreen from '../screens/coach/LiveMatchScreen';
 import LiveMatchSummaryScreen from '../screens/coach/LiveMatchSummaryScreen';
+import TeamStatsScreen from '../screens/coach/TeamStatsScreen';
 
 // Pantallas del jugador (tab navigator)
 import PlayerDashboardScreen from '../screens/player/PlayerDashboardScreen';
@@ -367,6 +368,12 @@ export default function AppNavigator() {
                 headerTintColor: '#fff',
                 headerTitleStyle: { fontWeight: 'bold' },
               }}
+            />
+            {/* Estadísticas del equipo */}
+            <Stack.Screen
+              name="TeamStats"
+              component={TeamStatsScreen}
+              options={{ title: 'Estadísticas del equipo', ...coachHeaderOptions }}
             />
             {/* Partido en directo */}
             <Stack.Screen
