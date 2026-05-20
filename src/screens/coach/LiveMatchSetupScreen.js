@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useContext } from 'react';
 import {
-  View, StyleSheet, ScrollView, TouchableOpacity, Alert,
+  View, StyleSheet, ScrollView, TouchableOpacity, Alert, Image,
 } from 'react-native';
 import {
   Text, Button, ActivityIndicator, Portal, Dialog, Divider,
@@ -121,6 +121,12 @@ const FORMATIONS = {
     },
   ],
 };
+
+// "Juan García López" → "Juan García"   |   "Juan García" → "Juan García"
+function getDisplayLabel(nombre) {
+  const parts = (nombre || '').trim().split(/\s+/).filter(Boolean);
+  return parts.slice(0, 2).join(' ');
+}
 
 // Determina el tipo de partido a partir del campo modalidad
 function getModalidadType(modalidad) {
@@ -319,9 +325,9 @@ export default function LiveMatchSetupScreen({ route, navigation }) {
     Object.entries(assignments).forEach(([slotIdx, playerId]) => {
       const player = players.find(p => p.id === playerId);
       if (!player) return;
-      const apellido = player.nombre.split(' ').slice(-1)[0];
+      const label = getDisplayLabel(player.nombre);
       webViewRef.current?.injectJavaScript(
-        `assignPlayer(${slotIdx},${player.dorsal ?? 'null'},'${apellido}');true;`
+        `assignPlayer(${slotIdx},${player.dorsal ?? 'null'},'${label.replace(/'/g, "\\'")}');true;`
       );
     });
   }
@@ -363,9 +369,9 @@ export default function LiveMatchSetupScreen({ route, navigation }) {
     newAssignments[activeSlot] = player.id;
     setAssignments(newAssignments);
 
-    const apellido = player.nombre.split(' ').slice(-1)[0];
+    const label = getDisplayLabel(player.nombre);
     webViewRef.current?.injectJavaScript(
-      `assignPlayer(${activeSlot},${player.dorsal ?? 'null'},'${apellido}');true;`
+      `assignPlayer(${activeSlot},${player.dorsal ?? 'null'},'${label.replace(/'/g, "\\'")}');true;`
     );
     setActiveSlot(null);
   }
@@ -501,7 +507,7 @@ export default function LiveMatchSetupScreen({ route, navigation }) {
         >
           <Dialog.Title style={styles.dialogTitle}>
             {slotCurrentPlayer
-              ? `Cambiar: ${slotCurrentPlayer.nombre.split(' ').slice(-1)[0]}`
+              ? `Cambiar: ${getDisplayLabel(slotCurrentPlayer.nombre)}`
               : 'Elegir jugador'}
           </Dialog.Title>
           <Dialog.ScrollArea style={styles.dialogScrollArea}>
@@ -515,13 +521,13 @@ export default function LiveMatchSetupScreen({ route, navigation }) {
                     style={styles.dialogPlayerRow}
                     onPress={() => handleAssignPlayer(p)}
                   >
-                    <View style={styles.dialogPlayerLeft}>
-                      {p.dorsal != null && (
-                        <Text style={styles.dialogDorsal}>#{p.dorsal}</Text>
-                      )}
-                      <Text style={styles.dialogPlayerName}>{p.nombre}</Text>
+                    <PlayerAvatar player={p} />
+                    <View style={styles.dialogPlayerInfo}>
+                      <Text style={styles.dialogPlayerName}>{getDisplayLabel(p.nombre)}</Text>
+                      <Text style={styles.dialogPlayerMeta}>
+                        {p.posicion || '—'}{p.dorsal != null ? `  ·  #${p.dorsal}` : ''}
+                      </Text>
                     </View>
-                    <Text style={styles.dialogPlayerPos}>{p.posicion || '—'}</Text>
                   </TouchableOpacity>
                 </View>
               ))}
@@ -596,9 +602,37 @@ const styles = StyleSheet.create({
     paddingVertical: 13, paddingHorizontal: 18,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
-  dialogPlayerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  dialogDorsal:     { color: COACH_COLOR, fontWeight: 'bold', fontSize: 13, minWidth: 28 },
-  dialogPlayerName: { color: '#fff', fontSize: 15 },
-  dialogPlayerPos:  { color: 'rgba(255,255,255,0.38)', fontSize: 12 },
+  dialogPlayerInfo: { flex: 1, justifyContent: 'center' },
+  dialogPlayerName: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  dialogPlayerMeta: { color: 'rgba(255,255,255,0.38)', fontSize: 12, marginTop: 2 },
   dialogEmpty:      { color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: 24 },
+
+  avatar:           { width: 40, height: 40, borderRadius: 20, marginRight: 12, overflow: 'hidden' },
+  avatarImg:        { width: 40, height: 40, borderRadius: 20 },
+  avatarFallback:   {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: COACH_COLOR,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  avatarInitials:   { color: '#fff', fontWeight: 'bold', fontSize: 15 },
 });
+
+function PlayerAvatar({ player }) {
+  const initials = (player.nombre || '?')
+    .trim().split(/\s+/).filter(Boolean)
+    .slice(0, 2).map(w => w[0].toUpperCase()).join('');
+
+  if (player.foto_url) {
+    return (
+      <Image
+        source={{ uri: player.foto_url }}
+        style={styles.avatarImg}
+      />
+    );
+  }
+  return (
+    <View style={styles.avatarFallback}>
+      <Text style={styles.avatarInitials}>{initials}</Text>
+    </View>
+  );
+}
