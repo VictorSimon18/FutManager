@@ -335,6 +335,28 @@ export default function PlayerDetailScreen({ route, navigation }) {
           </View>
         )}
 
+        {/* Acciones */}
+        <View style={styles.actions}>
+          <Button
+            mode="contained"
+            icon="pencil"
+            onPress={() => navigation.navigate('PlayerForm', { playerId })}
+            buttonColor="#105E7A"
+            style={styles.actionBtn}
+          >
+            Editar
+          </Button>
+          <Button
+            mode="outlined"
+            icon="account-remove"
+            onPress={() => setConfirmDelete(true)}
+            textColor="#D32F2F"
+            style={[styles.actionBtn, styles.deleteBtn]}
+          >
+            Dar de baja
+          </Button>
+        </View>
+
         <ConfirmDialog
           visible={confirmDelete}
           title="Dar de baja"
